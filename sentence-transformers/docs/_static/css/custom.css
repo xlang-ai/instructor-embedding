@@ -1,0 +1,34 @@
+.wy-nav-content {
+    max-width: 1280px;
+}
+
+a.icon-home {
+    font-size: 1.4em;
+}
+
+ul.simple {
+    margin-top: -20px;
+}
+dd.field-odd > ul.simple {
+    margin-top: 0px;
+}
+
+dl.class > dt {
+    width: 100%;
+}
+
+.toctree-l1  > ul {
+    margin-top: 0px !important;
+}
+
+.wy-side-nav-search .wy-dropdown>a:hover, .wy-side-nav-search>a:hover {
+    background: none;
+}
+
+.project-name {
+    font-size: 1.4em;
+}
+
+.wy-side-nav-search {
+    padding-top: 0px;
+}
