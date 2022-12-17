@@ -1,4 +1,4 @@
-# Selective Annotation Makes Language Models Better Few-Shot Learners
+# 1 Embedder, 70 Tasks: Instruction-Finetuned Text Embeddings
 
 Code for paper [1 Embedder, 70 Tasks: Instruction-Finetuned Text Embeddings](https://github.com/HKUNLP/instructor-embedding)
 
