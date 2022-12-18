@@ -64,5 +64,17 @@ embeddings = model.encode([[instruction,sentence,0]])
 print(embeddings)
 ```
 
+### Computing sentence similarities
+```
+from sklearn.metrics.pairwise import cosine_similarity
+sentences_a = [['Represent the Science sentence; Input: ','Parton energy loss in QCD matter',0], 
+               ['Represent the Financial statement; Input: ','The Federal Reserve on Wednesday raised its benchmark interest rate.',0]
+sentences_b = [['Represent the Science sentence; Input: ','The Chiral Phase Transition in Dissipative Dynamics', 0],
+               ['Represent the Financial statement; Input: ','The funds rose less than 0.5 per cent on Friday',0]
+embeddings_a = model.encode(sentences_a)
+embeddings_b = model.encode(sentences_b)
+similarities = cosine_similarity(embeddings_a,embeddings_b)
+```
+
 ## Citation
 If you find our work helpful, please cite us
