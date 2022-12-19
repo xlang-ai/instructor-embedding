@@ -1,4 +1,4 @@
-# 1 Embedder, 70 Tasks: Instruction-Finetuned Text Embeddings
+# One Embedder, Any Task: Instruction-Finetuned Text Embeddings
 
 This repository contains the code and pre-trained models for our paper [One Embedder, Any Task: Instruction-Finetuned Text Embeddings](https://github.com/HKUNLP/instructor-embedding). 
 
