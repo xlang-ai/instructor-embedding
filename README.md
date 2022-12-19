@@ -102,15 +102,27 @@ We explain the arguments in the following:
 All the other arguments are standard `Huggingface's transformers` training arguments. Some of the often-used arguments are `--overwrite_output_dir`, `--num_train_epochs`, `--learning_rate`, which are self-explained. 
 
 ### Evalution
-We evalute INSTRUCTOR massively on 70 diverse tasks to avoid bias. Encoders performing well on one task may not achieve good results in another task. The 70 tasks include three benchmarks, [MTEB](https://huggingface.co/spaces/mteb/leaderboard), [Billboard](https://arxiv.org/abs/2112.04139), and [Prompt Retrieval](https://arxiv.org/abs/2209.01975). MTEB is a comprehensive embedding evaluation benchmark that aims to provide a holistic view of embedding models.  It combines several conventional benchmarks (e.g., BEIR and STS) and spans a wide range of domain-specific datasets, including science, biology, and medicine. Prompt Retrieval tasks aim to retrieve a few in-context learning (i.e., demonstration) examples from annotated examples given a test instance. The embedding model is used to encode all annotated examples and to find the few most similar examples to the test instance based on the cosine similarity. We evalute emebddings by measuring the average performance on these downstream tasks.
+We evalute INSTRUCTOR massively on 70 diverse tasks to avoid bias. The 70 tasks include three benchmarks, [MTEB](https://huggingface.co/spaces/mteb/leaderboard), [Billboard](https://arxiv.org/abs/2112.04139), and [Prompt Retrieval](https://arxiv.org/abs/2209.01975). 
+* MTEB is a comprehensive embedding evaluation benchmark that aims to provide a holistic view of embedding models.  It combines several conventional benchmarks (e.g., BEIR and STS) and spans a wide range of domain-specific datasets, including science, biology, and medicine. 
+* Prompt Retrieval tasks aim to retrieve a few in-context learning (i.e., demonstration) examples from annotated examples given a test instance. The embedding model is used to encode all annotated examples and to find the few most similar examples to the test instance based on the cosine similarity. We evalute emebddings by measuring the average performance on the downstream tasks. 
+* Billboard applies INSTRUCTOR to automatic evaluations for text generation tasks. Following [Kasai et al. (2022a)](https://arxiv.org/abs/2112.04139), we measure the cosine similarity between the generated text and each reference text and take the maximum similarity score over all references available. We evaluate all embedding models by the Pearson correlation with the human judgments.
+
 For results in the paper, we use 40GB A100 with CUDA 11. Using different types of devices or different versions of CUDA/other software may lead to slightly different performance
+
 ### MTEB
+To evaluate the model performance on MTEB benchmark dataset, run the following command, where 
+* `--model_name` is a model id or trained checkpoint.
+* `--task_name` is a task name in MTEB benchmark.
+* `--result_file` is a directory to stored the evaluation results.
 ```
 cd evalution/MTEB
 python examples/evaluate_model.py --model_name hku-nlp/instructor-large --output_dir outputs --task_name ArguAna --result_file results
 ```
 
 ### Billboard
+To evaluate the model performance on Billboard, run the following command, where 
+* `--model_name` is a model id or trained checkpoint.
+* `--task` is a task name on Billboard (mscoco, mt or cnndm).
 ```
 cd evaluation/text_evaluation
 python main.py --model_name hku-nlp/instructor-large --task mscoco --add_prompt
