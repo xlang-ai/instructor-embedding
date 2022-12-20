@@ -1,6 +1,6 @@
 # One Embedder, Any Task: Instruction-Finetuned Text Embeddings
 
-This repository contains the code and pre-trained models for our paper [One Embedder, Any Task: Instruction-Finetuned Text Embeddings](https://github.com/HKUNLP/instructor-embedding). 
+This repository contains the code and pre-trained models for our paper [One Embedder, Any Task: Instruction-Finetuned Text Embeddings](https://arxiv.org/abs/2212.09741)
 
 We provide a universal encoder, **INSTRUCTOR**, capable of calculating fixed-size embeddings for **any** piece of text (e.g., a title, a sentence, a document, etc.) in test time without further training. With instructions, the embeddings are **customized** for various domains (e.g., science, finance, etc.) and task objectives (e.g., classification, information retrieval, etc.)
 <p align="center">
@@ -112,7 +112,7 @@ To evaluate the model performance on MTEB benchmark dataset, run the following c
 cd evalution/MTEB
 python examples/evaluate_model.py --model_name hku-nlp/instructor-large --output_dir outputs --task_name ArguAna --result_file results
 ```
-You can evaluate your trained model checkpoints by specifying `--model_name` and run all MTEB datasets by changing `--task_name`. Check [our paper](https://github.com/HKUNLP/instructor-embedding) or [MTEB benchmark](https://huggingface.co/spaces/mteb/leaderboard) for evaluation metrics of all tasks.
+You can evaluate your trained model checkpoints by specifying `--model_name` and run all MTEB datasets by changing `--task_name`. Check [our paper](https://arxiv.org/abs/2212.09741) or [MTEB benchmark](https://huggingface.co/spaces/mteb/leaderboard) for evaluation metrics of all tasks.
 
 ### Billboard
 To evaluate the model performance on Billboard, run the following command:
