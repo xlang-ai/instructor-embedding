@@ -8,7 +8,7 @@ We introduce **Instructor**👨‍🏫, an instruction-finetuned text embedding 
 </p>
 
 ## Installation
-We recommend **Python 3.6** or higher. To establish the environment, run this code in the shell:
+We recommend Python 3.6 or higher. To establish the environment, run this code in the shell:
 ```bash
 conda env create -f instructor_embedding.yml
 conda activate instructor
