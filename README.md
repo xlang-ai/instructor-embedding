@@ -139,8 +139,8 @@ If you find our work helpful, please cite us:
 ```bibtex
 @inproceedings{INSTRUCTOR,
   title={One Embedder, Any Task: Instruction-Finetuned Text Embeddings},
-  author={Hongjin Su*, Weijia Shi*, Jungo Kasai, Yizhong Wang, Yushi Hu, Mari Ostendorf, Wen-tau Yih, Noah A. Smith, Luke Zettlemoyer, Tao Yu},
-  url={},
+  author={Hongjin Su, Weijia Shi, Jungo Kasai, Yizhong Wang, Yushi Hu, Mari Ostendorf, Wen-tau Yih, Noah A. Smith, Luke Zettlemoyer, Tao Yu},
+  url={https://arxiv.org/abs/2212.09741},
   year={2022},
 }
 ```
