@@ -32,7 +32,7 @@ First download a pretrained model
 
 ```python
 from sentence_transformers import SentenceTransformer
-model = SentenceTransformer('hku-nlp/instructor-large')
+model = SentenceTransformer('hkunlp/instructor-large')
 ```
 
 Then provide the sentence and customized instruction to the model.
@@ -110,7 +110,7 @@ We evalute INSTRUCTOR massively on 70 diverse tasks, spanning a wide range of ta
 To evaluate the model performance on MTEB benchmark dataset, run the following command:
 ```python
 cd evalution/MTEB
-python examples/evaluate_model.py --model_name hku-nlp/instructor-large --output_dir outputs --task_name ArguAna --result_file results
+python examples/evaluate_model.py --model_name hkunlp/instructor-large --output_dir outputs --task_name ArguAna --result_file results
 ```
 You can evaluate your trained model checkpoints by specifying `--model_name` and run all MTEB datasets by changing `--task_name`. Check [our paper](https://arxiv.org/abs/2212.09741) or [MTEB benchmark](https://huggingface.co/spaces/mteb/leaderboard) for evaluation metrics of all tasks.
 
@@ -118,7 +118,7 @@ You can evaluate your trained model checkpoints by specifying `--model_name` and
 To evaluate the model performance on Billboard, run the following command:
 ```python
 cd evaluation/text_evaluation
-python main.py --model_name hku-nlp/instructor-large --task mscoco --add_prompt
+python main.py --model_name hkunlp/instructor-large --task mscoco --add_prompt
 ```
 You can evaluate your trained model checkpoints by specifying `--model_name` and run all Billboard datasets by changing `--task`. In all of the three datasets in Billboard, we report the Pearson correlation.
 
@@ -126,7 +126,7 @@ You can evaluate your trained model checkpoints by specifying `--model_name` and
 To evaluate the model performance on Prompt Retrieval, run the following command:
 ```python
 cd evaluation/prompt_retrieval
-python main.py --embedding_model hku-nlp/instructor-large --task rte --model_cache_dir {cache_dir} --output_dir {output_dir}
+python main.py --embedding_model hkunlp/instructor-large --task rte --model_cache_dir {cache_dir} --output_dir {output_dir}
 ```
 You can evaluate your trained model checkpoints by specifying `--model_name` and run all Billboard datasets by changing `--task`. In order to have a consistent metric, we cast all tasks in Prompt Retrieval into a "text-to-text" format, and report the Rouge-L score.
 
