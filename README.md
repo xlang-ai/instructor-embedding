@@ -2,7 +2,7 @@
 
 This repository contains the code and pre-trained models for our paper [One Embedder, Any Task: Instruction-Finetuned Text Embeddings](https://arxiv.org/abs/2212.09741)
 
-We introduce **INSTRUCTOR**, a new method for computing text embeddings given task instructions. With instructions, the embeddings are domain-specific (e.g., specialized for science, finance, etc.) and task-aware (e.g., customized for classification, information retrieval, etc.).
+We introduce **Instructor**👨‍🏫, an instruction-finetuned text embedding model that can generate text embeddings tailored to any task (e.g., classification, retrieval, clustering, text evaluation, etc.) and domains (e.g., science, finance, etc.) by simply providing the task instruction, without any finetuning. Instructor achieves sota on 70 diverse embedding tasks!
 <p align="center">
   <img src="multitask.png" width="80%" align="middle" class="center"/>
 </p>
