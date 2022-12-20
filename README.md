@@ -4,7 +4,7 @@ This repository contains the code and pre-trained models for our paper [One Embe
 
 We introduce **INSTRUCTOR**, a new method for computing text embeddings given task instructions. With instructions, the embeddings are domain-specific (e.g., specialized for science, finance, etc.) and task-aware (e.g., customized for classification, information retrieval, etc.). On 70 diverse evaluation tasks, **INSTRUCTOR** outperforms the previous best results by 3.4% on average.
 <p align="center">
-  <img src="first.png" width="40%" align="middle" class="center"/>
+  <img src="multitask.png" width="40%" align="middle" class="center"/>
 </p>
 
 ## Installation
