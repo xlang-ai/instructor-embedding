@@ -62,6 +62,8 @@ for pair, embedding in zip(text_instruction_pairs, customized_embeddings):
     print("")
 ```
 
+## Use cases
+We provide a few specific use cases in the following. For more examples and applications, refer to [our paper](https://arxiv.org/abs/2212.09741)
 ### Calculate embeddings for your customized texts
 If you want to calculate customized embeddings for specific sentences, you may follow the unified template to write instructions: 
 
@@ -83,7 +85,7 @@ embeddings_b = model.encode(sentences_b)
 similarities = cosine_similarity(embeddings_a,embeddings_b)
 ```
 
-## Use customized embeddings for information retrieval.
+### Use customized embeddings for information retrieval.
 ```python
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
@@ -98,7 +100,7 @@ retrieved_doc_id = np.argmax(similarities)
 print(retrieved_doc_id)
 ```
 
-## Use customized embeddings for clustering
+### Use customized embeddings for clustering
 ```python
 import sklearn
 sentences = [['Represent the Medicine sentence for clustering; Input: ','Dynamical Scalar Degree of Freedom in Horava-Lifshitz Gravity', 0],
