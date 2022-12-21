@@ -173,7 +173,7 @@ You can evaluate your trained model checkpoints by specifying `--model_name` and
 To evaluate the model performance on Prompt Retrieval, run the following command:
 ```python
 cd evaluation/prompt_retrieval
-python main.py --embedding_model hkunlp/instructor-large --task rte --model_cache_dir {cache_dir} --output_dir {output_dir}
+python main.py --embedding_model hkunlp/instructor-large --task rte --model_cache_dir {cache_dir} --output_dir {output_dir} --add_prompt
 ```
 You can evaluate your trained model checkpoints by specifying `--model_name` and run prompt retrieval datasets by changing `--task`. In order to have a consistent metric, we cast all tasks in Prompt Retrieval into a "text-to-text" format, and report the Rouge-L score.
 
