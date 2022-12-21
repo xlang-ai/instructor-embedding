@@ -345,13 +345,8 @@ def main():
     )
 
     set_seed(training_args.seed)
-    if not os.path.isfile(os.path.join(model_args.cache_dir,'train.json')):
-        os.system(f'gdown 1dvmDBp095CY5hwIJxcRNaLH7sIwym4ql -O {os.path.join(model_args.cache_dir,"train.json")}')
-    with open(os.path.join(model_args.cache_dir, 'train.json')) as f:
-        train_examples_raw_batch = json.load(f)
-    train_examples_raw = []
-    for b in train_examples_raw_batch:
-        train_examples_raw += b
+    with open(os.path.join(model_args.cache_dir, 'medi-data.json')) as f:
+        train_examples_raw = json.load(f)
     print(f'There are {len(train_examples_raw)} examples to train in total')
     if data_args.debug_mode:
         train_examples_raw = train_examples_raw[:int(data_args.debug_mode)]
