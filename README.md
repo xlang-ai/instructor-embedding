@@ -16,6 +16,8 @@ cd transformers
 pip install -e .
 cd sentence-transformers
 pip install -e .
+cd evaluation/MTEB
+pip install -e .
 ```
 That will create the environment INSTRUCTOR we used.
 
