@@ -16,8 +16,6 @@ cd transformers
 pip install -e .
 cd sentence-transformers
 pip install -e .
-cd evaluation/MTEB
-pip install -e .
 ```
 That will create the environment INSTRUCTOR we used.
 
@@ -150,7 +148,13 @@ We evalute INSTRUCTOR massively on 70 diverse tasks, spanning a wide range of ta
 * Billboard applies INSTRUCTOR to automatic evaluations for text generation tasks. Following [Kasai et al. (2022a)](https://arxiv.org/abs/2112.04139), we measure the cosine similarity between the generated text and each reference text and take the maximum similarity score over all references available. We evaluate all embedding models by the Pearson correlation with the human judgments. -->
 
 ### MTEB
-To evaluate the model performance on MTEB benchmark dataset, run the following command:
+To evaluate the model performance on MTEB benchmark dataset, first install the MTEB library
+
+```python
+cd evaluation/MTEB
+pip install -e .
+```
+Then run the following command:
 ```python
 cd evalution/MTEB
 python examples/evaluate_model.py --model_name hkunlp/instructor-large --output_dir outputs --task_name ArguAna --result_file results
