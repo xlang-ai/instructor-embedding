@@ -102,7 +102,7 @@ print(retrieved_doc_id)
 
 ### Use customized embeddings for clustering
 ```python
-import sklearn
+import sklearn.cluster
 sentences = [['Represent the Medicine sentence for clustering; Input: ','Dynamical Scalar Degree of Freedom in Horava-Lifshitz Gravity', 0],
              ['Represent the Medicine sentence for clustering; Input: ','Comparison of Atmospheric Neutrino Flux Calculations at Low Energies', 0],
              ['Represent the Medicine sentence for clustering; Input: ','Fermion Bags in the Massive Gross-Neveu Model', 0],
