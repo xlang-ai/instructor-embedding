@@ -12,16 +12,16 @@ from .Evaluator import Evaluator
 
 DEFINITIONS = {
     'hku-nlp/instructor-large': {
-        'STS12': 'Represent a statement: ',
-        'STS13': 'represent the sentence: ',
-        'STS14': 'represent the sentence: ',
-        'STS15': 'represent the sentence: ',
-        'STS16': 'Represent a sentence for classification: ',
-        'STS17': 'represent a sentence: ',
-        'STS22': 'represent the sentence for classification: ',
-        'BIOSSES': 'Represent the bio-medical statement: ',
-        'SICK-R': 'Represent a sentence: ',
-        'STSBenchmark': 'represent the statement:\n',
+        'STS12': 'Represent the statement: ',
+        'STS13': 'represent the statement: ',
+        'STS14': 'Represent the statement: ',
+        'STS15': 'Represent the statement: ',
+        'STS16': 'Represent the statement: ',
+        'STS17': 'Represent the sentence for classification: ',
+        'STS22': 'represent the statement: ',
+        'BIOSSES': 'Represent the Bio-medical statement: ',
+        'SICK-R': 'Represent the statement: ',
+        'STSBenchmark': 'represent the statement: ',
     },
     'hku-nlp/instructor-xl': {
         'STS12': 'Represent the sentence for retrieving duplicate sentences; Input: ',

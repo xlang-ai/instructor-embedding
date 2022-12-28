@@ -12,9 +12,9 @@ logger = logging.getLogger(__name__)
 DEFINITIONS = {
     'hku-nlp/instructor-large':
         {
-            'TwitterSemEval2015': 'Represent the tweet post for retrieving duplicate comments; Input: ',
-            'TwitterURLCorpus': 'represent tweet post:\n',
-            'SprintDuplicateQuestions': 'represent the sprint post&',
+            'TwitterSemEval2015': 'Represent the tweet post for retrieving duplicate comments: ',
+            'TwitterURLCorpus': 'represent a tweet post for retrieval: ',
+            'SprintDuplicateQuestions': 'represent the Sprint post for retrieving duplicate posts: ',
         },
     'hku-nlp/instructor-xl':
         {

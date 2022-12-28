@@ -14,13 +14,12 @@ logger = logging.getLogger(__name__)
 
 DEFINITIONS = {
     'hku-nlp/instructor-large':{
-        'Banking77Classification': 'Represent banking purpose for retrieving duplicate purposes; Input: ',
-        'EmotionClassification':  'Represent an emotion sentence for classifying the emotion as one of '
-                                 'love, sadness, joy, fear, surprise or anger; Input: ',
-        'TweetSentimentExtractionClassification': 'Represent the sentence for classification; Input: ',
-        'AmazonCounterfactualClassification': 'Represent the counter-factual sentence for classification; Input: ',
-        'ImdbClassification': 'Represent the review sentence for classifying emotion as positive or negative; Input: ',
-        'MassiveIntentClassification':'Represent the purpose for classifying the purpose as one of qa_maths, takeaway_order, weather_query, '
+        'Banking77Classification': 'Represent the bank purpose for classification: ',
+        'EmotionClassification':  'Represent an emotion sentence for classifying the emotion: ',
+        'TweetSentimentExtractionClassification': 'Represent a Tweet sentence for classification: ',
+        'AmazonCounterfactualClassification': 'Represent a counter-factual sentence for classification: ',
+        'ImdbClassification': 'Represent a review sentence for classifying emotion as positive or negative: ',
+        'MassiveIntentClassification':'Represent the sentence for classifying the purpose as one of qa_maths, takeaway_order, weather_query, '
                                        'audio_volume_other, recommendation_movies, iot_cleaning, qa_stock, '
                                        'iot_hue_lighton, iot_hue_lightchange, alarm_remove, play_radio, '
                                        'transport_taxi, datetime_query, lists_remove, lists_createoradd, '
@@ -33,15 +32,15 @@ DEFINITIONS = {
                                        'general_greet, play_podcasts, alarm_query, calendar_set, alarm_set, '
                                        'transport_ticket, general_quirky, audio_volume_up, iot_wemo_on, qa_definition, '
                                        'recommendation_locations, play_audiobook, email_addcontact, takeaway_query, '
-                                       'lists_query or email_query; Input: ',
+                                       'lists_query or email_query: ',
         'MassiveScenarioClassification': "Represent the scene for classifying its scene as one of calendar, "
                                          "play, general, alarm, music, iot, audio, takeaway, datetime, recommendation, "
-                                         "social, lists, email, transport, cooking, weather, news or qa; Input: ",
-        'MTOPDomainClassification': 'Represent a domain:\n',
-        'MTOPIntentClassification': 'Represent the intent:\n',
-        'ToxicConversationsClassification': 'Represent the toxiticy comment for classifying its toxiticy as toxic or non-toxic; Input: ',
-        'AmazonPolarityClassification': 'Represent the sentiment comment for retrieving a duplicate sentence; Input: ',
-        'AmazonReviewsClassification': 'Represent the review sentence for classifying the emotion as positive or negative; Input: ',
+                                         "social, lists, email, transport, cooking, weather, news or qa: ",
+        'MTOPDomainClassification': 'Represent a sentence: ',
+        'MTOPIntentClassification': 'Represent the sentence for retrieval: ',
+        'ToxicConversationsClassification': 'Represent a toxicity comment for classifying its toxicity as toxic or non-toxic: ',
+        'AmazonPolarityClassification': 'Represent the sentiment comment for retrieving a duplicate sentence: ',
+        'AmazonReviewsClassification': 'Represent a review sentence for classification: ',
     },
     'hku-nlp/instructor-xl': {
         'Banking77Classification': 'Represent banking purpose for retrieving duplicate purposes; Input: ',

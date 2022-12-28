@@ -18,7 +18,7 @@ DEFINITIONS = {
         'SummEval': 'Represent a Biomedical sentence for retrieving duplicate sentences; Input: ',
     },
     'hku-nlp/instructor-large': {
-        'SummEval': 'Represent the Biomedical summary for retrieving duplicate summaries; Input: ',
+        'SummEval': 'Represent a Bio-medicine sentence for retrieving duplicate sentences: ',
     }
 
 }

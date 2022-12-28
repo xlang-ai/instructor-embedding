@@ -151,133 +151,133 @@ DEFINITIONS = {
     'hku-nlp/instructor-large':{
         'ClimateFEVER':
             {
-                'query': 'Represent the climate question for retrieving documents; Input: ',
-                'corpus': 'Represent the climate document for retrieval; Input: ',
+                'query': 'Represent the Climate question for retrieving supporting documents: ',
+                'corpus': 'Represent the document for retrieval: ',
             },
         'HotpotQA':
             {
-                'query': 'Represent a Wikipedia question for retrieving supporting documents:\n',
-                'corpus': 'Represent the wikipedia document:\n',
+                'query': 'Represent the Wikipedia question for retrieving supporting documents: ',
+                'corpus': 'Represent the document for retrieval: ',
             },
         'FEVER':
             {
-                'query': 'Represent the fact for retrieving supporting evidence; Input: ',
-                'corpus': 'Represent the evidence; Input: ',
+                'query': 'Represent the fact for retrieving supporting evidence: ',
+                'corpus': 'Represent the evidence for retrieval: ',
             },
         'MSMARCO':
             {
-                'query': 'Represent the question for retrieving documents:\n',
-                'corpus': 'Represent the document for retrieval:\n',
+                'query': 'Represent the question for retrieving supporting documents: ',
+                'corpus': 'Represent the document for retrieval: ',
             },
         'DBPedia':
             {
-                'query': 'Represent the Wikipedia sentence for retrieving documents:\n',
-                'corpus': 'Represent the Wikipedia document for retrieval:\n',
+                'query': 'Represent the Wikipedia sentence for retrieving supporting documents: ',
+                'corpus': 'Represent the document for retrieval: ',
             },
         'NQ':
             {
-                'query': 'Represent a Wikipedia question for retrieving supporting documents:\n',
-                'corpus': 'Represent the document for retrieval; Input: ',
+                'query': 'Represent the Wikipedia question for retrieving supporting documents: ',
+                'corpus': 'Represent the document for retrieval: ',
             },
         'QuoraRetrieval':
             {
-                'query': 'Represent the Quora question for retrieving duplicate questions; Input: ',
-                'corpus': 'Represent the Quora question for retrieving duplicate questions; Input: ',
+                'query': 'Represent the Quora question for retrieving duplicate questions: ',
+                'corpus': 'Represent the Quora question for retrieving duplicate questions: ',
             },
         'SCIDOCS':
             {
-                'query': 'Represent the Scientific question for retrieving supporting documents:\n',
-                'corpus': 'Represent the Scientific paper:\n',
+                'query': 'Represent a Science question for retrieving supporting papers: ',
+                'corpus': 'Represent the Science paper: ',
             },
         'TRECCOVID':
             {
-                'query': 'Represent a Coronavirus question for retrieving supporting documents:\n',
-                'corpus': 'Represent the Coronavirus document:\n',
+                'query': 'Represent the Coronavirus question for retrieving supporting documents: ',
+                'corpus': 'Represent the Coronavirus document for retrieval: ',
             },
         'Touche2020':
             {
-                'query': 'Represent a question; Input: ',
-                'corpus': 'Represent an argument; Input: ',
+                'query': 'Represent a question: ',
+                'corpus': 'Represent an argument: ',
             },
         'SciFact':
             {
-                'query': 'Represent a Scientific question for retrieving a supporting document;\n',
-                'corpus': 'Represent the science document:\n',
+                'query': 'Represent a Scientific query for retrieving a supporting passage; ',
+                'corpus': 'represent the Scientific passage for retrieval; ',
             },
         'NFCorpus':
             {
-                'query': 'Represent the Medicine question for retrieving a relevant document:\n',
-                'corpus': 'Represent the medical document for retrieval:\n',
+                'query': 'Represent the Medicine question for retrieving a relevant document: ',
+                'corpus': 'Represent the medical document for retrieval: ',
             },
         'ArguAna':
             {
-                'query': 'Represent the Debating discourse for retrieving a counter-discourse:\n',
-                'corpus': 'Represent the Counter-discourse:\n',
+                'query': 'Represent a Debate argument for retrieving a counter-argument: ',
+                'corpus': 'Represent a Counter-argument: ',
             },
         'CQADupstackTexRetrieval':
             {
-                'query': 'Represent the question for retrieving answers:\n',
-                'corpus': 'Represent the answer for retrieval:\n',
+                'query': 'Represent the question for retrieving answers: ',
+                'corpus': 'Represent the answer for retrieval: ',
             },
         'CQADupstackWebmastersRetrieval':
             {
-                'query': 'Represent the Website question for retrieving answers:\n',
-                'corpus': 'Represent the Website answer:\n',
+                'query': 'Represent the Webmaster question for retrieving answers: ',
+                'corpus': 'Represent the Webmaster answer: ',
             },
         'CQADupstackEnglishRetrieval':
             {
-                'query': 'Represent the English question for retrieving documents:\n',
-                'corpus': 'Represent the English answer for retrieval:\n',
+                'query': 'Represent the English question for retrieving documents: ',
+                'corpus': 'Represent the English answer for retrieval: ',
             },
         'CQADupstackGamingRetrieval':
             {
-                'query': 'Represent the Gaming question for retrieving answers:\n',
-                'corpus': 'Represent the Gaming answer for retrieval:\n',
+                'query': 'Represent the Gaming question for retrieving answers: ',
+                'corpus': 'Represent the Gaming answer for retrieval: ',
             },
         'CQADupstackGisRetrieval':
             {
-                'query': 'Represent the Gis question for retrieving answers:\n',
-                'corpus': 'Represent the Gis answer for retrieval:\n',
+                'query': 'Represent the Gis question for retrieving answers: ',
+                'corpus': 'Represent the Gis answer for retrieval: ',
             },
         'CQADupstackUnixRetrieval':
             {
-                'query': 'Represent the Unix question for retrieving answers:\n',
-                'corpus': 'Represent the Unix answer for retrieval:\n',
+                'query': 'Represent the Unix question for retrieving answers: ',
+                'corpus': 'Represent the Unix answer for retrieval: ',
             },
         'CQADupstackMathematicaRetrieval':
             {
-                'query': 'Represent the Mathematical question for retrieving answers:\n',
-                'corpus': 'Represent the Mathematical answer for retrieval:\n',
+                'query': 'Represent the Mathematical question for retrieving answers: ',
+                'corpus': 'Represent the Mathematical answer for retrieval: ',
             },
         'CQADupstackStatsRetrieval':
             {
-                'query': 'Represent the Statistical question for retrieving answers; Input: ',
-                'corpus': 'Represent the Statistical answer for retrieval; Input: ',
+                'query': 'Represent the Statistical question for retrieving answers: ',
+                'corpus': 'Represent the Statistical answer for retrieval: ',
             },
         'CQADupstackPhysicsRetrieval':
             {
-                'query': 'Represent the Physics question for retrieving answers; Input: ',
-                'corpus': 'Represent the Physics answer for retrieval; Input: ',
+                'query': 'Represent the Physics question for retrieving answers: ',
+                'corpus': 'Represent the Physics answer for retrieval: ',
             },
         'CQADupstackProgrammersRetrieval':
             {
-                'query': 'Represent the Programming question for retrieving answers:\n',
-                'corpus': 'Represent the Programming answer for retrieval:\n',
+                'query': 'Represent the Programming question for retrieving answers: ',
+                'corpus': 'Represent the Programming answer for retrieval: ',
             },
         'CQADupstackAndroidRetrieval':
             {
-                'query': 'Represent the Android question for retrieving answers; Input: ',
-                'corpus': 'Represent the Android answer for retrieval; Input: ',
+                'query': 'Represent the Android question for retrieving answers: ',
+                'corpus': 'Represent the Android answer for retrieval: ',
             },
         'CQADupstackWordpressRetrieval':
             {
-                'query': 'Represent the Wordpress question for retrieving answers; Input: ',
-                'corpus': 'Represent the Wordpress answer for retrieval; Input: ',
+                'query': 'Represent the Wordpress question for retrieving answers: ',
+                'corpus': 'Represent the Wordpress answer for retrieval: ',
             },
         'FiQA2018':
             {
-                'query': 'Represent a financial question for retrieving the supporting answers:\n',
-                'corpus': 'Represent the finance answer for retrieval:\n',
+                'query': 'Represent the finance question for retrieving the supporting answers: ',
+                'corpus': 'Represent the finance answer for retrieval: ',
             },
     },
 }
@@ -416,65 +416,31 @@ class DRESModel:
         elif self.args.prompt:
             instruction = DEFINITIONS[self.args.prompt][self.args.task_name]['query']
         if self.args.prompt:
-            print('with prompt')
             for s in queries:
-                if len(self.tokenizer(instruction + s)['input_ids']) <= 512:
-                    new_sentences.append([instruction, s, 0])
-                else:
-                    new_sentences.append(['', s, 0])
+                new_sentences.append([instruction, s, 0])
         else:
             new_sentences = queries
 
         return self.model.encode(new_sentences, batch_size=batch_size, **kwargs)
 
     def encode_corpus(self, corpus: List[Dict[str, str]], batch_size: int, **kwargs):
-        if self.args.task_name in ['SciFact','Touche2020']:
-            if type(corpus) is dict:
-                sentences = [
-                    (corpus["title"][i] + ' ' + corpus["text"][i]).strip()
-                    if "title" in corpus
-                    else corpus["text"][i].strip()
-                    for i in range(len(corpus["text"]))
-                ]
-            else:
-                sentences = [
-                    (doc["title"] + ' ' + doc["text"]).strip() if "title" in doc else doc["text"].strip()
-                    for doc in corpus
-                ]
-            new_sentences = []
-            instruction = DEFINITIONS[self.args.prompt][self.args.task_name]['corpus']
-            for s in sentences:
-                new_sentences.append([instruction, s, 0])
-            return self.model.encode(sentences, batch_size=128, **kwargs)
+        if type(corpus) is dict:
+            sentences = [
+                (corpus["title"][i] + ' ' + corpus["text"][i]).strip()
+                if "title" in corpus
+                else corpus["text"][i].strip()
+                for i in range(len(corpus["text"]))
+            ]
         else:
-            if type(corpus) is dict:
-                sentences = [
-                    (corpus["title"][i] + self.sep + corpus["text"][i]).strip()
-                    if "title" in corpus
-                    else corpus["text"][i].strip()
-                    for i in range(len(corpus["text"]))
-                ]
-            else:
-                sentences = [
-                    (doc["title"] + self.sep + doc["text"]).strip() if "title" in doc else doc["text"].strip()
-                    for doc in corpus
-                ]
-
-            if self.args.prompt:
-                new_sentences = []
-                if isinstance(DEFINITIONS[self.args.prompt][self.args.task_name], str):
-                    instruction = DEFINITIONS[self.args.prompt][self.args.task_name]
-                else:
-                    instruction = DEFINITIONS[self.args.prompt][self.args.task_name]['corpus']
-                for s in sentences:
-                    if len(self.tokenizer(instruction + s)['input_ids']) <= 512:
-                        new_sentences.append([instruction, s, 0])
-                    else:
-                        new_sentences.append(['', s, 0])
-                    # new_sentences.append([instruction, s, 0])
-            else:
-                new_sentences = sentences
-            return self.model.encode(new_sentences, batch_size=batch_size, **kwargs)
+            sentences = [
+                (doc["title"] + ' ' + doc["text"]).strip() if "title" in doc else doc["text"].strip()
+                for doc in corpus
+            ]
+        new_sentences = []
+        instruction = DEFINITIONS[self.args.prompt][self.args.task_name]['corpus']
+        for s in sentences:
+            new_sentences.append([instruction, s, 0])
+        return self.model.encode(sentences, batch_size=128, **kwargs)
 
     def encode_corpus_parallel(
         self, corpus: List[Dict[str, str]], pool: Dict[str, object], batch_size: int, chunk_id: int, **kwargs
