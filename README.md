@@ -7,6 +7,11 @@ We introduce **Instructor**👨‍🏫, an instruction-finetuned text embedding 
   <img src="instructor.png" width="100%" align="middle" class="center"/>
 </p>
 
+**************************** **Updates** ****************************
+
+* 12/28: We released a new [checkpoint](https://huggingface.co/hkunlp/instructor-large) trained with hard negatives, which gives better performance.
+* 12/21: We released our [paper](https://arxiv.org/abs/2212.09741), [code](https://github.com/HKUNLP/instructor-embedding), [checkpoint](https://huggingface.co/hkunlp/instructor-large) and [project page](https://instructor-embedding.github.io/)! Check them out!
+
 ## Installation
 We recommend Python 3.6 or higher. To establish the environment, run this code in the shell:
 ```bash
