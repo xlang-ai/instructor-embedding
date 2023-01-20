@@ -1,11 +1,12 @@
 # Metric submission
+import sys
 import argparse, glob
 import numpy as np
 import os, json
 import torch
 from scipy.stats.stats import pearsonr
 from filelock import FileLock
-from sentence_transformers import SentenceTransformer
+from instructor import INSTRUCTOR
 
 np.random.seed(0)
 
@@ -62,28 +63,44 @@ def compute_corr(hyp, ref, human, use_clip=False):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(allow_abbrev=False)
-    parser.add_argument('--cache', type=str, default='/scratch/acd13578qu/huggingface', help='cache folder path')
-    parser.add_argument("--add_prompt", action="store_true", help="whether to add prompt")
+    parser.add_argument('--cache', type=str, default=None, required=True,help='cache folder path to store models and embeddings')
+    parser.add_argument("--prompt", type=str,default='hkunlp/instructor-large')
     parser.add_argument("--model_name", default=None, type=str)
     parser.add_argument("--task", default=None, choices=['mscoco','cnndm','mt'],type=str)
     args = parser.parse_args()
 
-    if args.add_prompt:
+    if args.prompt!='no':
+        print('add prompt')
         identifier = 'with_prompt'
     else:
+        print('without prompt')
+        # if not args.prompt in ['hkunlp/instructor-base','hkunlp/instructor-large','hkunlp/instructor-xl']:
+        #     args.prompt = 'hkunlp/instructor-large'
         identifier = 'without_prompt'
     identifier = args.model_name.replace('/','_')+'_'+args.task+'_'+identifier
     definitions = {
-        'mscoco': 'Represent the caption for retrieving duplicate captions; Input: ',
-        'cnndm': 'Represent a sentence; Input: ',
-        'mt': 'Represent the statement for retrieving duplicate statements. Input: '
+        'hkunlp/instructor-base': {
+            'mscoco': 'Represent the image caption: ',
+            'cnndm': 'Represent a comment: ',
+            'mt': 'Represent the statement: '
+        },
+        'hkunlp/instructor-large':{
+            'mscoco': 'Represent the caption: ',
+            'cnndm': 'Represent a comment: ',
+            'mt': 'Represent the statement: '
+        },
+        'hkunlp/instructor-xl': {
+            'mscoco': 'Represent the image caption: ',
+            'cnndm': 'Represent a news comment: ',
+            'mt': 'Represent the translation statement; ',
+        }
     }
     reference_files = {
         'mscoco': 'data/mscoco/mscoco_references.jsonl',
         'cnndm': 'data/cnndm/cnndm_references.jsonl',
         'mt': 'data/wmt20-zh-en/wmt20-zh-en_references.jsonl',
     }
-    definition = definitions[args.task]
+    definition = definitions[args.prompt][args.task]
 
     with open(reference_files[args.task]) as f:
         lines = f.readlines()
@@ -98,7 +115,7 @@ if __name__ == '__main__':
         for idx in range(cur_num):
             input_text = d["refs"][idx]
             assert isinstance(input_text, str), f'{type(input_text)}'
-            if args.add_prompt:
+            if args.prompt!='no':
                 input_text = [definition, input_text, 0]
             all_texts_to_encode.append(input_text)
     all_ref_nums.append(num_count)
@@ -106,7 +123,7 @@ if __name__ == '__main__':
     assert len(all_ref_nums) == total_line_num + 1
 
     # with FileLock('model.lock'):
-    emb_model = SentenceTransformer(args.model_name, cache_folder=args.cache)
+    emb_model = INSTRUCTOR(args.model_name, cache_folder=args.cache)
     emb_model.cuda()
     embeddings = np.asarray(emb_model.encode(all_texts_to_encode, batch_size=32))
     embeddings = embeddings.tolist()
@@ -114,7 +131,7 @@ if __name__ == '__main__':
     reshaped_embeddings = []
     for idx in range(total_line_num):
         reshaped_embeddings.append(embeddings[all_ref_nums[idx]:all_ref_nums[idx + 1]])
-    with open(os.path.join(args.cache,f'references_emb_{identifier}.json'), 'w') as f:
+    with open(os.path.join(args.cache,f'references_emb_{identifier}_{args.task}.json'), 'w') as f:
         json.dump(reshaped_embeddings, f, indent=4)
 
     thumb_files = {
@@ -128,15 +145,15 @@ if __name__ == '__main__':
     for l in lines:
         d = json.loads(l)
         input_text = d['hyp']
-        if args.add_prompt:
+        if args.prompt!='no':
             assert isinstance(input_text, str), f'{type(input_text)}'
             input_text = [definition, input_text, 0]
         all_texts_to_encode.append(input_text)
 
     embeddings = np.asarray(emb_model.encode(all_texts_to_encode, batch_size=32))
 
-    with open(os.path.join(args.cache,f'THumB-1.0_emb_{identifier}.json'), 'w') as f:
+    with open(os.path.join(args.cache,f'THumB-1.0_emb_{identifier}_{args.task}.json'), 'w') as f:
         json.dump(embeddings.tolist(), f, indent=4)
 
-    compute_corr(os.path.join(args.cache,f'THumB-1.0_emb_{identifier}.json'),
-                 os.path.join(args.cache,f'references_emb_{identifier}.json'), thumb_files[args.task])
+    compute_corr(os.path.join(args.cache,f'THumB-1.0_emb_{identifier}_{args.task}.json'),
+                 os.path.join(args.cache,f'references_emb_{identifier}_{args.task}.json'), thumb_files[args.task])

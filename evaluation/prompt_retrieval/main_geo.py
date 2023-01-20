@@ -9,6 +9,11 @@ import json
 import time
 import pandas as pd
 import pickle as pkl
+import sys
+from os.path import dirname, abspath
+parent_dir = dirname(dirname(dirname(abspath(__file__))))
+sys.path.insert(1,parent_dir)
+from instructor_new import INSTRUCTOR
 from bridge_content_encoder import get_database_matches
 from transformers import AutoTokenizer
 from tqdm import tqdm
@@ -49,7 +54,7 @@ def calculate_sentence_transformer_embedding(examples,embedding_model,mean_norma
         print('add prompt')
         text_to_encode = [['Represent a Geography example; Input: ',raw_item["seq_in"],0] for raw_item in examples]
     num = len(text_to_encode)
-    emb_model = SentenceTransformer(embedding_model)
+    emb_model = INSTRUCTOR(embedding_model)
     embeddings = []
     bar = tqdm(range(0,num,20),desc='calculate embeddings')
     for i in range(0,num,20):

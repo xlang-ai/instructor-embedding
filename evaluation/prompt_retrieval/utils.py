@@ -3,7 +3,7 @@ import openai
 import json
 import os
 from tqdm import tqdm
-from sentence_transformers import SentenceTransformer
+from instructor_new import INSTRUCTOR
 from collections import OrderedDict
 import sqlparse
 
@@ -16,7 +16,7 @@ definitions = {
 
 def calculate_sentence_transformer_embedding(text_to_encode,args):
     num = len(text_to_encode)
-    emb_model = SentenceTransformer(args.embedding_model)
+    emb_model = INSTRUCTOR(args.embedding_model)
     embeddings = []
     bar = tqdm(range(0,num,20),desc='calculate embeddings')
     if args.add_prompt:

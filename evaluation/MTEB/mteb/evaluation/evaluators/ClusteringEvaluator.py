@@ -10,20 +10,20 @@ logger = logging.getLogger(__name__)
 from .Evaluator import Evaluator
 
 DEFINITIONS = {
-    'hku-nlp/instructor-xl': {
-        'TwentyNewsgroupsClustering': 'Represent the news comment for retrieval; Input: ',
-        'BiorxivClusteringS2S': 'Represent the biomedical statement for retrieval; Input: ',
-        'MedrxivClusteringS2S': 'Represent the medicine statement for retrieval; Input: ',
-        'ArxivClusteringP2P': 'Represent the science passage for retrieval; Input: ',
-        'ArxivClusteringS2S': 'Represent the science statement for retrieval; Input: ',
-        'BiorxivClusteringP2P': 'Represent the Bio-medicine passage for retrieval; Input: ',
-        'MedrxivClusteringP2P': 'Represent the medical claim for retrieval; Input: ',
-        'RedditClustering': 'represent a reddit community title: Input, ',
-        'RedditClusteringP2P': 'represent a Reddit passage:\n',
-        'StackExchangeClustering': 'Represent the question for retrieval; Input: ',
-        'StackExchangeClusteringP2P': 'Represent the question and answer for retrieving duplicate question and answers; Input: ',
+    'hkunlp/instructor-xl': {
+        'TwentyNewsgroupsClustering': 'Represent the news comment for clustering; ',
+        'BiorxivClusteringS2S': 'Represent the biological statement for retrieval; ',
+        'MedrxivClusteringS2S': 'Represent the Biological statement for clustering biological statements: ',
+        'ArxivClusteringP2P': 'Represent the science passage for retrieval: ',
+        'ArxivClusteringS2S': 'Represent the Science statements for retrieval: ',
+        'BiorxivClusteringP2P': 'Represent the Biological passage for retrieval: ',
+        'MedrxivClusteringP2P': 'Represent the Biological paragraph for retrieval: ',
+        'RedditClustering': 'represent the Reddit community title: ',
+        'RedditClusteringP2P': 'represent a Reddit community passage: ',
+        'StackExchangeClustering': 'Represent a question for retrieval: ',
+        'StackExchangeClusteringP2P': 'Represent the question and answer passage for retrieving relevant question and answer passages: ',
     },
-    'hku-nlp/instructor-large': {
+    'hkunlp/instructor-large': {
         'TwentyNewsgroupsClustering': 'Represent the news comment for retrieval: ',
         'BiorxivClusteringS2S': 'Represent the biomedical statement for retrieval: ',
         'MedrxivClusteringS2S': 'Represent the medicine statement for retrieving duplicate sentences: ',
@@ -36,7 +36,19 @@ DEFINITIONS = {
         'StackExchangeClustering': 'Represent the question for retrieval: ',
         'StackExchangeClusteringP2P': 'Represent the question and answer for retrieving duplicate question and answers: ',
     },
-
+    'hkunlp/instructor-base': {
+        'TwentyNewsgroupsClustering': 'Represent the news comment for retrieval: ',
+        'BiorxivClusteringS2S': 'Represent the biomedical statement for retrieval: ',
+        'MedrxivClusteringS2S': 'Represent the medicine statement for retrieving duplicate sentences: ',
+        'ArxivClusteringP2P': 'Represent the science passage for retrieval: ',
+        'ArxivClusteringS2S': 'Represent the science statement for retrieval: ',
+        'BiorxivClusteringP2P': 'Represent the Bio-medicine passage for retrieval: ',
+        'MedrxivClusteringP2P': 'Represent the medicine paragraph for retrieval: ',
+        'RedditClustering': 'represent a reddit community title: ',
+        'RedditClusteringP2P': 'represent a Reddit community passage: ',
+        'StackExchangeClustering': 'Represent the question for retrieval: ',
+        'StackExchangeClusteringP2P': 'Represent the question and answer for retrieving duplicate question and answers: ',
+    },
 }
 
 class ClusteringEvaluator(Evaluator):

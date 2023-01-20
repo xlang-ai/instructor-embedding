@@ -14,10 +14,13 @@ logger = logging.getLogger(__name__)
 from .Evaluator import Evaluator
 
 DEFINITIONS = {
-    'hku-nlp/instructor-xl': {
-        'SummEval': 'Represent a Biomedical sentence for retrieving duplicate sentences; Input: ',
+    'hkunlp/instructor-xl': {
+        'SummEval': 'represent a biological statement to retrieve duplicate statements: ',
     },
-    'hku-nlp/instructor-large': {
+    'hkunlp/instructor-large': {
+        'SummEval': 'Represent a Bio-medicine sentence for retrieving duplicate sentences: ',
+    },
+    'hkunlp/instructor-base': {
         'SummEval': 'Represent a Bio-medicine sentence for retrieving duplicate sentences: ',
     }
 

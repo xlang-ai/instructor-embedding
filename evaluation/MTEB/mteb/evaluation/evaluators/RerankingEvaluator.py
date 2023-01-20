@@ -12,7 +12,29 @@ from .utils import cos_sim
 logger = logging.getLogger(__name__)
 
 DEFINITIONS = {
-    'hku-nlp/instructor-large': {
+    'hkunlp/instructor-base': {
+        'AskUbuntuDupQuestions':
+            {
+                'query': 'Represent the Ubuntu question for reranking: ',
+                'corpus': 'Represent a Ubuntu question for reranking: ',
+            },
+        'StackOverflowDupQuestions':
+            {
+                'query': 'Represent the StackOverflow question: ',
+                'corpus': 'Represent a StackOverflow question: ',
+            },
+        'SciDocsRR':
+            {
+                'query': 'Represent the Scientific title: ',
+                'corpus': 'Represent the Scientific document: '
+            },
+        'MindSmallReranking':
+            {
+                'query': 'Represent the news query for retrieving articles: ',
+                'corpus': 'Represent the news article for retrieval: ',
+            },
+    },
+    'hkunlp/instructor-large': {
         'AskUbuntuDupQuestions':
             {
                 'query': 'Represent the Ubuntu question for reranking: ',
@@ -34,26 +56,26 @@ DEFINITIONS = {
                 'corpus': 'Represent the news article for retrieval: ',
             },
     },
-    'hku-nlp/instructor-xl': {
+    'hkunlp/instructor-xl': {
         'AskUbuntuDupQuestions':
             {
-                'query': 'Represent the Ubuntu question for retrieving duplicate questions; Input: ',
-                'corpus': 'Represent the Ubuntu question for retrieving duplicate questions; Input: ',
+                'query': 'Represent the Ubuntu question to retrieve a duplicate question: ',
+                'corpus': 'Represent the Ubuntu question: ',
             },
         'StackOverflowDupQuestions':
             {
-                'query': 'Represent the question; Input: ',
-                'corpus': 'Represent the question; Input: ',
+                'query': 'Represent the StackOverflow question: ',
+                'corpus': 'Represent the StackOverflow question: ',
             },
         'SciDocsRR':
             {
-                'query': 'Represent the Science title; Input: ',
-                'corpus': 'Represent the Science document; Input: '
+                'query': 'Represent the Science question: ',
+                'corpus': 'Represent the Science document: '
             },
         'MindSmallReranking':
             {
-                'query': 'Represent the news query for retrieving articles; Input: ',
-                'corpus': 'Represent the news article for retrieval; Input: ',
+                'query': 'Represent the news query for retrieving articles: ',
+                'corpus': 'Represent the news article for retrieval: ',
             },
     }
 }
@@ -125,7 +147,6 @@ class RerankingEvaluator(Evaluator):
         if isinstance(self.samples[0]["query"], str):
             new_sentences = []
             if self.args.prompt:
-                print('with prompt')
                 if isinstance(DEFINITIONS[self.args.prompt][self.args.task_name], str):
                     instruction = DEFINITIONS[self.args.prompt][self.args.task_name]
                 else:
@@ -144,7 +165,6 @@ class RerankingEvaluator(Evaluator):
             all_query_flattened = [q for sample in self.samples for q in sample["query"]]
             new_sentences = []
             if self.args.prompt:
-                print('with prompt')
                 if isinstance(DEFINITIONS[self.args.prompt][self.args.task_name], str):
                     instruction = DEFINITIONS[self.args.prompt][self.args.task_name]
                 else:

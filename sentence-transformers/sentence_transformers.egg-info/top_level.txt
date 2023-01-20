@@ -1,2 +1,0 @@
-sentence_transformers
-src

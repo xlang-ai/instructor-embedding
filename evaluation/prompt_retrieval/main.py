@@ -5,6 +5,7 @@ import torch
 import numpy as np
 import json
 import nltk
+import shutil
 import time
 from tqdm import tqdm
 from datasets import load_metric
@@ -46,8 +47,9 @@ def postprocess_text(preds, labels):
 if __name__=='__main__':
     args.data_cache_dir = args.model_cache_dir
     set_seed(args.seed)
-    if not os.path.isdir(args.output_dir):
-        os.makedirs(args.output_dir,exist_ok=True)
+    if os.path.isdir(args.output_dir):
+        shutil.rmtree(args.output_dir)
+    os.makedirs(args.output_dir,exist_ok=True)
     train_examples,eval_examples,train_text_to_encode,eval_text_to_encode,format_example,label_map = get_task(args=args)
     total_train_embeds = calculate_sentence_transformer_embedding(text_to_encode=train_text_to_encode,
                                                                   args=args)

@@ -194,12 +194,13 @@ class MTEB:
         """
         # Set logging
         my_args = kwargs['args']
-        my_args.prompt = my_args.model_name
-        if my_args.prompt!='hku-nlp/instructor-xl':
-            my_args.prompt = 'hku-nlp/instructor-large'
-        if verbosity < 2:
-            datasets.logging.set_verbosity(40)
-            datasets.logging.disable_progress_bar()
+        if my_args.prompt is None:
+            my_args.prompt = my_args.model_name
+        if not my_args.prompt in ['hkunlp/instructor-xl','hkunlp/instructor-base']:
+            my_args.prompt = 'hkunlp/instructor-large'
+        # if verbosity < 2:
+        datasets.logging.set_verbosity(40)
+        datasets.logging.disable_progress_bar()
 
         # Create output folder
         if output_folder is not None:
@@ -263,7 +264,9 @@ class MTEB:
             del self.tasks[0]
 
         task_name = list(evaluation_results.keys())[0]
-        if task_name in ['NQ','NFCorpus','SciFact','CQADupstackWebmastersRetrieval','ArguAna','CQADupstackEnglishRetrieval','CQADupstackGamingRetrieval','CQADupstackGisRetrieval','ClimateFEVER','DBPedia','FEVER','FiQA2018','CQADupstackTexRetrieval','CQADupstackUnixRetrieval','CQADupstackMathematicaRetrieval','CQADupstackStatsRetrieval','CQADupstackPhysicsRetrieval','CQADupstackProgrammersRetrieval','CQADupstackAndroidRetrieval','CQADupstackWordpressRetrieval','HotpotQA','MSMARCOv2','MSMARCO','QuoraRetrieval','SCIDOCS','TRECCOVID','Touche2020']:
+        if task_name in ['MSMARCO',]:
+            r = evaluation_results[task_name]['dev']['ndcg_at_10']
+        elif task_name in ['NQ','NFCorpus','SciFact','CQADupstackWebmastersRetrieval','ArguAna','CQADupstackEnglishRetrieval','CQADupstackGamingRetrieval','CQADupstackGisRetrieval','ClimateFEVER','DBPedia','FEVER','FiQA2018','CQADupstackTexRetrieval','CQADupstackUnixRetrieval','CQADupstackMathematicaRetrieval','CQADupstackStatsRetrieval','CQADupstackPhysicsRetrieval','CQADupstackProgrammersRetrieval','CQADupstackAndroidRetrieval','CQADupstackWordpressRetrieval','HotpotQA','MSMARCOv2','QuoraRetrieval','SCIDOCS','TRECCOVID','Touche2020']:
             r = evaluation_results[task_name]['test']['ndcg_at_10']
         elif task_name in ['AmazonCounterfactualClassification','AmazonReviewsClassification','MTOPDomainClassification','MTOPIntentClassification','MassiveIntentClassification','MassiveScenarioClassification',]:
             r = evaluation_results[task_name]['test']['en']['accuracy']

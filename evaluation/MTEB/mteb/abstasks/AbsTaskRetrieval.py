@@ -1,10 +1,9 @@
 import logging
+import queue
 from time import time
 from typing import Dict, List
 
 import torch.multiprocessing as mp
-
-from sentence_transformers import SentenceTransformer
 
 from .AbsTask import AbsTask
 from transformers import AutoTokenizer
@@ -16,139 +15,139 @@ DRES_METHODS = ["encode_queries", "encode_corpus"]
 DRPES_METHODS = ["start_multi_process_pool", "stop_multi_process_pool", "encode_queries", "encode_corpus", "encode_corpus_parallel"]
 
 DEFINITIONS = {
-    'hku-nlp/instructor-xl': {
+    'hkunlp/instructor-xl': {
         'ClimateFEVER':
             {
-                'query': 'Represent the climate question for retrieving documents; Input: ',
-                'corpus': 'Represent the climate document for retrieval; Input: ',
+                'query': 'Represent the Climate question for retrieving supporting documents: ',
+                'corpus': 'Represent the document for retrieval: ',
             },
         'HotpotQA':
             {
-                'query': 'Represent a Wikipedia question for retrieving supporting documents; Input: ',
-                'corpus': 'Represent the Wikipedia document for retrieval; Input: ',
+                'query': 'Represent the Wikipedia question for retrieving supporting documents: ',
+                'corpus': 'Represent the document for retrieval: ',
             },
         'FEVER':
             {
-                'query': 'Represent the fact for retrieving supporting evidence; Input: ',
-                'corpus': 'Represent the evidence; Input: ',
+                'query': 'Represent the fact for retrieving supporting evidence: ',
+                'corpus': 'Represent the evidence for retrieval: ',
             },
         'MSMARCO':
             {
-                'query': 'Represent the question for retrieving documents:\n',
-                'corpus': 'Represent the document for retrieval:\n',
+                'query': 'Represent the question for retrieving supporting documents: ',
+                'corpus': 'Represent the document for retrieval: ',
             },
         'DBPedia':
             {
-                'query': 'Represent the Wikipedia sentence for retrieving documents:\n',
-                'corpus': 'Represent the Wikipedia document for retrieval:\n',
+                'query': 'Represent the Wikipedia questions to retrieve a supporting document: ',
+                'corpus': 'Represent the Wikipedia documents for retrieval: ',
             },
         'NQ':
             {
-                'query': 'Represent a Wikipedia question for retrieving supporting documents:\n',
-                'corpus': 'Represent the document for retrieval; Input: ',
+                'query': 'Represent the Wikipedia question for retrieving supporting documents: ',
+                'corpus': 'Represent the document for retrieval: ',
             },
         'QuoraRetrieval':
             {
-                'query': 'Represent the Quora question for retrieving duplicate questions; Input: ',
-                'corpus': 'Represent the Quora question for retrieving duplicate questions; Input: ',
+                'query': 'Represent the Quora question to retrieve question: ',
+                'corpus': 'Represent the Quora question to retrieve question: ',
             },
         'SCIDOCS':
             {
-                'query': 'Represent the Scientific question for retrieving supporting documents:\n',
-                'corpus': 'Represent the Scientific paper:\n',
+                'query': 'Represent a Science question for retrieving supporting papers: ',
+                'corpus': 'Represent the Science paper: ',
             },
         'TRECCOVID':
             {
-                'query': 'Represent a Coronavirus question for retrieving supporting documents:\n',
-                'corpus': 'Represent the Coronavirus document:\n',
+                'query': 'Represent the Coronavirus questions to retrieve a supporting document: ',
+                'corpus': 'Represent the Coronavirus documents for retrieval: ',
             },
         'Touche2020':
             {
-                'query': 'Represent a question for retrieving supporting documents:\n',
-                'corpus': 'Represent the document for retrieval; Input: ',
+                'query': 'Represent questions: ',
+                'corpus': 'Represent arguments: ',
             },
         'SciFact':
             {
-                'query': 'Represent a Scientific question for retrieving a supporting document;\n',
-                'corpus': 'Represent the science document:\n',
+                'query': 'Represent the Scientific queries for retrieving a supporting passage: ',
+                'corpus': 'represent the scientific paragraph for retrieval: ',
             },
         'NFCorpus':
             {
-                'query': 'Represent the Medicine question for retrieving a relevant document:\n',
-                'corpus': 'Represent the medical document for retrieval:\n',
+                'query': 'Represent the nutrition facts to retrieve Public medical articles: ',
+                'corpus': 'Represent the Public medical articles for retrieval: ',
             },
         'ArguAna':
             {
-                'query': 'Represent the Debating discourse for retrieving a counter-discourse:\n',
-                'corpus': 'Represent the Counter-discourse:\n',
+                'query': 'Represent Debating conversations to retrieve a counter-argument: ',
+                'corpus': 'Represent counter-arguments: ',
             },
         'CQADupstackTexRetrieval':
             {
-                'query': 'Represent the question for retrieving answers:\n',
-                'corpus': 'Represent the answer for retrieval:\n',
+                'query': 'Represent the question for retrieving answers: ',
+                'corpus': 'Represent the answer for retrieval: ',
             },
         'CQADupstackWebmastersRetrieval':
             {
-                'query': 'Represent the Website question for retrieving answers:\n',
-                'corpus': 'Represent the Website answer:\n',
+                'query': 'Represent the Webmaster question for retrieving answers: ',
+                'corpus': 'Represent the Webmaster answer: ',
             },
         'CQADupstackEnglishRetrieval':
             {
-                'query': 'Represent the English question for retrieving documents:\n',
-                'corpus': 'Represent the English answer for retrieval:\n',
+                'query': 'Represent the English question for retrieving documents: ',
+                'corpus': 'Represent the English answer for retrieval: ',
             },
         'CQADupstackGamingRetrieval':
             {
-                'query': 'Represent the Gaming question for retrieving answers:\n',
-                'corpus': 'Represent the Gaming answer for retrieval:\n',
+                'query': 'Represent the Gaming question for retrieving answers: ',
+                'corpus': 'Represent the Gaming answer for retrieval: ',
             },
         'CQADupstackGisRetrieval':
             {
-                'query': 'Represent the Gis question for retrieving answers:\n',
-                'corpus': 'Represent the Gis answer for retrieval:\n',
+                'query': 'Represent the Gis question for retrieving answers: ',
+                'corpus': 'Represent the Gis answer for retrieval: ',
             },
         'CQADupstackUnixRetrieval':
             {
-                'query': 'Represent the Unix question for retrieving answers:\n',
-                'corpus': 'Represent the Unix answer for retrieval:\n',
+                'query': 'Represent the Unix questions to retrieve a supporting answer: ',
+                'corpus': 'Represent the Unix answers for retrieval: ',
             },
         'CQADupstackMathematicaRetrieval':
             {
-                'query': 'Represent the Mathematical question for retrieving answers:\n',
-                'corpus': 'Represent the Mathematical answer for retrieval:\n',
+                'query': 'Represent the Mathematical question for retrieving answers: ',
+                'corpus': 'Represent the Mathematical answer for retrieval: ',
             },
         'CQADupstackStatsRetrieval':
             {
-                'query': 'Represent the Statistical question for retrieving answers; Input: ',
-                'corpus': 'Represent the Statistical answer for retrieval; Input: ',
+                'query': 'Represent the Statistical question for retrieving answers: ',
+                'corpus': 'Represent the Statistical answer for retrieval: ',
             },
         'CQADupstackPhysicsRetrieval':
             {
-                'query': 'Represent the Physics question for retrieving answers; Input: ',
-                'corpus': 'Represent the Physics answer for retrieval; Input: ',
+                'query': 'Represent the Physics question for retrieving answers: ',
+                'corpus': 'Represent the Physics answer for retrieval: ',
             },
         'CQADupstackProgrammersRetrieval':
             {
-                'query': 'Represent the Programming question for retrieving answers:\n',
-                'corpus': 'Represent the Programming answer for retrieval:\n',
+                'query': 'Represent the Programming question for retrieving answers: ',
+                'corpus': 'Represent the Programming answer for retrieval: ',
             },
         'CQADupstackAndroidRetrieval':
             {
-                'query': 'Represent the Android question for retrieving answers; Input: ',
-                'corpus': 'Represent the Android answer for retrieval; Input: ',
+                'query': 'Represent the Android question for retrieving answers: ',
+                'corpus': 'Represent the Android answer for retrieval: ',
             },
         'CQADupstackWordpressRetrieval':
             {
-                'query': 'Represent the Wordpress question for retrieving answers; Input: ',
-                'corpus': 'Represent the Wordpress answer for retrieval; Input: ',
+                'query': 'Represent the Wordpress question for retrieving answers: ',
+                'corpus': 'Represent the Wordpress answer for retrieval: ',
             },
         'FiQA2018':
             {
-                'query': 'Represent a financial question for retrieving the supporting answers:\n',
-                'corpus': 'Represent the finance answer for retrieval:\n',
+                'query': 'Represent the finance questions to retrieve a supporting answer: ',
+                'corpus': 'Represent the finance answers for retrieval: ',
             },
     },
-    'hku-nlp/instructor-large':{
+    'hkunlp/instructor-large':{
         'ClimateFEVER':
             {
                 'query': 'Represent the Climate question for retrieving supporting documents: ',
@@ -280,7 +279,153 @@ DEFINITIONS = {
                 'corpus': 'Represent the finance answer for retrieval: ',
             },
     },
+    'hkunlp/instructor-base': {
+        'ClimateFEVER':
+            {
+                'query': 'Represent the Climate question for retrieving supporting documents: ',
+                'corpus': 'Represent the document for retrieval: ',
+            },
+        'HotpotQA':
+            {
+                'query': 'Represent the Wikipedia question for retrieving supporting documents: ',
+                'corpus': 'Represent the document for retrieval: ',
+            },
+        'FEVER':
+            {
+                'query': 'Represent the fact for retrieving supporting evidence: ',
+                'corpus': 'Represent the evidence for retrieval: ',
+            },
+        'MSMARCO':
+            {
+                'query': 'Represent the question for retrieving supporting documents: ',
+                'corpus': 'Represent the document for retrieval: ',
+            },
+        'DBPedia':
+            {
+                'query': 'Represent the Wikipedia sentence for retrieving supporting documents: ',
+                'corpus': 'Represent the document for retrieval: ',
+            },
+        'NQ':
+            {
+                'query': 'Represent the Wikipedia question for retrieving supporting documents: ',
+                'corpus': 'Represent the document for retrieval: ',
+            },
+        'QuoraRetrieval':
+            {
+                'query': 'Represent the Quora question for retrieving duplicate questions: ',
+                'corpus': 'Represent the Quora question for retrieving duplicate questions: ',
+            },
+        'SCIDOCS':
+            {
+                'query': 'Represent a Science question for retrieving supporting papers: ',
+                'corpus': 'Represent the Science paper: ',
+            },
+        'TRECCOVID':
+            {
+                'query': 'Represent the Coronavirus question for retrieving supporting documents: ',
+                'corpus': 'Represent the Coronavirus document for retrieval: ',
+            },
+        'Touche2020':
+            {
+                'query': 'Represent a question: ',
+                'corpus': 'Represent an argument: ',
+            },
+        'SciFact':
+            {
+                'query': 'Represent a Scientific query for retrieving a supporting passage; ',
+                'corpus': 'represent the Scientific passage for retrieval; ',
+            },
+        'NFCorpus':
+            {
+                'query': 'Represent the Medicine question for retrieving a relevant document: ',
+                'corpus': 'Represent the medical document for retrieval: ',
+            },
+        'ArguAna':
+            {
+                'query': 'Represent the Debate argument for retrieving a counter-argument: ',
+                'corpus': 'Represent the Counter debate argument: ',
+            },
+        'CQADupstackTexRetrieval':
+            {
+                'query': 'Represent the question for retrieving answers: ',
+                'corpus': 'Represent the answer for retrieval: ',
+            },
+        'CQADupstackWebmastersRetrieval':
+            {
+                'query': 'Represent the Webmaster question for retrieving answers: ',
+                'corpus': 'Represent the Webmaster answer: ',
+            },
+        'CQADupstackEnglishRetrieval':
+            {
+                'query': 'Represent the English question for retrieving documents: ',
+                'corpus': 'Represent the English answer for retrieval: ',
+            },
+        'CQADupstackGamingRetrieval':
+            {
+                'query': 'Represent the Gaming question for retrieving answers: ',
+                'corpus': 'Represent the Gaming answer for retrieval: ',
+            },
+        'CQADupstackGisRetrieval':
+            {
+                'query': 'Represent the Gis question for retrieving answers: ',
+                'corpus': 'Represent the Gis answer for retrieval: ',
+            },
+        'CQADupstackUnixRetrieval':
+            {
+                'query': 'Represent the Unix question for retrieving answers: ',
+                'corpus': 'Represent the Unix answer for retrieval: ',
+            },
+        'CQADupstackMathematicaRetrieval':
+            {
+                'query': 'Represent the Mathematical question for retrieving answers: ',
+                'corpus': 'Represent the Mathematical answer for retrieval: ',
+            },
+        'CQADupstackStatsRetrieval':
+            {
+                'query': 'Represent the Statistical question for retrieving answers: ',
+                'corpus': 'Represent the Statistical answer for retrieval: ',
+            },
+        'CQADupstackPhysicsRetrieval':
+            {
+                'query': 'Represent the Physics question for retrieving answers: ',
+                'corpus': 'Represent the Physics answer for retrieval: ',
+            },
+        'CQADupstackProgrammersRetrieval':
+            {
+                'query': 'Represent the Programming question for retrieving answers: ',
+                'corpus': 'Represent the Programming answer for retrieval: ',
+            },
+        'CQADupstackAndroidRetrieval':
+            {
+                'query': 'Represent the Android question for retrieving answers: ',
+                'corpus': 'Represent the Android answer for retrieval: ',
+            },
+        'CQADupstackWordpressRetrieval':
+            {
+                'query': 'Represent the Wordpress question for retrieving answers: ',
+                'corpus': 'Represent the Wordpress answer for retrieval: ',
+            },
+        'FiQA2018':
+            {
+                'query': 'Represent the finance question for retrieving the supporting answers: ',
+                'corpus': 'Represent the finance answer for retrieval: ',
+            },
+    },
 }
+
+
+def sentence_transformer_encode_multi_process_worker(target_device: str, model, input_queue, results_queue):
+    """
+    Internal working process to encode sentences in multi-process setup
+    """
+    while True:
+        try:
+            id, batch_size, sentences = input_queue.get()
+            embeddings = model.encode(sentences, device=target_device, show_progress_bar=False, convert_to_numpy=True,
+                                      batch_size=batch_size)
+            results_queue.put([id, embeddings])
+        except queue.Empty:
+            break
 
 class AbsTaskRetrieval(AbsTask):
     """
@@ -384,6 +529,7 @@ class DRESModel:
         self.sep = sep
         self.args = kwargs['args']
         self.tokenizer = AutoTokenizer.from_pretrained(self.args.model_name)
+        self.count = 0
 
     def start_multi_process_pool(self, target_devices: List[str] = None) -> Dict[str, object]:
         logger.info("Start multi-process pool on devices: {}".format(", ".join(map(str, target_devices))))
@@ -395,7 +541,7 @@ class DRESModel:
 
         for process_id, device_name in enumerate(target_devices):
             p = ctx.Process(
-                target=SentenceTransformer._encode_multi_process_worker,
+                target=sentence_transformer_encode_multi_process_worker,
                 args=(process_id, device_name, self.model, input_queue, output_queue),
                 daemon=True,
             )
@@ -424,6 +570,7 @@ class DRESModel:
         return self.model.encode(new_sentences, batch_size=batch_size, **kwargs)
 
     def encode_corpus(self, corpus: List[Dict[str, str]], batch_size: int, **kwargs):
+        self.count += 1
         if type(corpus) is dict:
             sentences = [
                 (corpus["title"][i] + ' ' + corpus["text"][i]).strip()

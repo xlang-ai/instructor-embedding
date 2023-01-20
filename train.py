@@ -1,26 +1,8 @@
-#!/usr/bin/env python
-# coding=utf-8
-# Copyright 2021 The HuggingFace Team. All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-"""
-Fine-tuning the library models for sequence to sequence.
-"""
-# You can also adapt this script on your own sequence to sequence task. Pointers for this are left as comments.
-
+# This script is based on the modification from https://github.com/huggingface/transformers
 import logging
 import os
 import torch
+import random
 import sys
 import json
 from dataclasses import dataclass, field
@@ -31,7 +13,7 @@ import nltk  # Here to have a nice missing dependency error message early on
 
 import transformers
 from filelock import FileLock
-from sentence_transformers import SentenceTransformer
+from instructor import INSTRUCTOR
 from transformers import (
     AutoTokenizer,
     DataCollatorForSeq2Seq,
@@ -46,6 +28,8 @@ from transformers import (
 )
 from transformers.trainer_utils import get_last_checkpoint
 from transformers.utils import check_min_version, is_offline_mode
+from torch.utils.data import Dataset, SequentialSampler
+from torch.utils.data.distributed import DistributedSampler
 from transformers.utils.versions import require_version
 from datasets import Dataset,DatasetDict
 
@@ -67,6 +51,103 @@ except (LookupError, OSError):
         nltk.download("punkt", quiet=True)
 
 MULTILINGUAL_TOKENIZERS = [MBartTokenizer, MBartTokenizerFast, MBart50Tokenizer, MBart50TokenizerFast]
+
+def has_length(dataset):
+    """
+    Checks if the dataset implements __len__() and it doesn't raise an error
+    """
+    try:
+        return len(dataset) is not None
+    except TypeError:
+        # TypeError: len() of unsized object
+        return False
+
+class InstructorTrainer(Seq2SeqTrainer):
+    def _get_train_sampler(self) :
+        if self.train_dataset is None or not has_length(self.train_dataset):
+            return None
+
+        generator = None
+        if self.args.world_size <= 1:
+            generator = torch.Generator()
+            # for backwards compatibility, we generate a seed here (which is sampled from a generator seeded with
+            # `args.seed`) if data_seed isn't provided.
+            # Further on in this method, we default to `args.seed` instead.
+            if self.args.data_seed is None:
+                seed = int(torch.empty((), dtype=torch.int64).random_().item())
+            else:
+                seed = self.args.data_seed
+            generator.manual_seed(seed)
+
+        seed = self.args.data_seed if self.args.data_seed is not None else self.args.seed
+
+        if self.args.world_size <= 1:
+            return SequentialSampler(self.train_dataset)
+        else:
+            return DistributedSampler(
+                self.train_dataset,
+                num_replicas=self.args.world_size,
+                rank=self.args.process_index,
+                seed=seed,
+            )
+
+    def compute_loss(self, model, inputs, return_outputs=False):
+        for task_id in inputs['task_id']:
+            assert task_id==inputs['task_id'][0],f"Examples in the same batch should come from the same task, " \
+                                                 f"but task {task_id} and task {inputs['task_id'][0]} are found"
+        cur_results = {}
+        for k in ['query', 'pos', 'neg']:
+            cur_inputs = {
+                'input_ids': inputs[f'{k}_input_ids'],
+                'attention_mask': inputs[f'{k}_attention_mask'],
+                'context_masks': inputs[f'{k}_context_masks'],
+            }
+            cur_results[k] = model(cur_inputs)['sentence_embedding']
+        embeddings_query = cur_results['query']
+        embeddings_pos = cur_results['pos']
+        embeddings_neg = cur_results['neg']
+
+        num = len(embeddings_query)
+        all_scores = None
+        from torch import nn
+        similarity_fct = nn.CosineSimilarity(dim=-1)
+        for i in range(0, num):
+            anchor_emb = embeddings_query[i].unsqueeze(0)
+            pos_emb = embeddings_pos[i].unsqueeze(0)
+            cur_score = similarity_fct(anchor_emb, pos_emb) / self.args.cl_temperature
+
+            for j in range(0, num):
+                one_neg_emb = embeddings_neg[j].unsqueeze(0)
+                one_neg_score = similarity_fct(anchor_emb, one_neg_emb) / self.args.cl_temperature
+                cur_score = torch.cat([cur_score, one_neg_score], dim=-1)
+            if all_scores is None:
+                all_scores = cur_score.unsqueeze(0)
+            else:
+                all_scores = torch.cat([all_scores, cur_score.unsqueeze(0)], dim=0)
+
+        labels = torch.zeros(all_scores.size(0)).long().to(embeddings_query.device)
+        loss = nn.CrossEntropyLoss()(all_scores, labels)
+
+        all_another_scores = None
+        for i in range(0, num):
+            anchor_emb = embeddings_pos[i].unsqueeze(0)
+            pos_emb = embeddings_query[i].unsqueeze(0)
+            cur_score = similarity_fct(anchor_emb, pos_emb) / self.args.cl_temperature
+
+            for j in range(0, num):
+                if i == j:
+                    continue
+                one_neg_emb = embeddings_query[j].unsqueeze(0)
+                one_neg_score = similarity_fct(anchor_emb, one_neg_emb) / self.args.cl_temperature
+                cur_score = torch.cat([cur_score, one_neg_score], dim=-1)
+            if all_another_scores is None:
+                all_another_scores = cur_score.unsqueeze(0)
+            else:
+                all_another_scores = torch.cat([all_another_scores, cur_score.unsqueeze(0)], dim=0)
+        labels_another = torch.zeros(all_another_scores.size(0)).long().to(embeddings_query.device)
+        loss += nn.CrossEntropyLoss()(all_another_scores, labels_another)
+
+        return loss
 
 @dataclass
 class ModelArguments:
@@ -173,6 +254,10 @@ class DataTrainingArguments:
         metadata={"help": "The number of processes to use for the preprocessing."},
     )
     debug_mode: Optional[int] = field(
+        default=None,
+        metadata={"help": "debug mode"},
+    )
+    max_examples: Optional[int] = field(
         default=None,
         metadata={"help": "debug mode"},
     )
@@ -304,7 +389,8 @@ def main():
     real_name_or_path = model_args.model_name_or_path
     data_args.model_name_or_path = model_args.model_name_or_path
     data_args.tokenizer_name_or_path = model_args.model_name_or_path
-    training_args.per_device_train_batch_size = 4
+    training_args.cl_temperature = data_args.cl_temperature
+    training_args.remove_unused_columns = False
     if not os.path.isdir(data_args.output_dir):
         os.makedirs(data_args.output_dir,exist_ok=True)
 
@@ -347,11 +433,39 @@ def main():
     set_seed(training_args.seed)
     with open(os.path.join(model_args.cache_dir, 'medi-data.json')) as f:
         train_examples_raw = json.load(f)
-    print(f'There are {len(train_examples_raw)} examples to train in total')
+    if data_args.debug_mode:
+        train_examples_raw = train_examples_raw[:data_args.debug_mode]
+    old_train_examples_raw = train_examples_raw
+    train_examples_raw = []
+    total_n = len(old_train_examples_raw)
+    real_batch_size = max(training_args.per_device_train_batch_size,
+                          training_args.per_device_train_batch_size * torch.cuda.device_count())
+    print('real_batch_size: ', real_batch_size,training_args.per_device_train_batch_size,torch.cuda.device_count())
+    for idx in range(0, total_n, real_batch_size):
+        local_task_name = old_train_examples_raw[idx]['task_id']
+        cur_batch = []
+        include_batch = True
+        for idx1 in range(idx, min(idx + real_batch_size, total_n)):
+            if not old_train_examples_raw[idx1]['task_id'] == local_task_name:
+                print(f'one batch in task {old_train_examples_raw[idx1]["task_id"]} is skipped')
+                include_batch = False
+                break
+            else:
+                cur_batch.append(old_train_examples_raw[idx1])
+        if include_batch and len(cur_batch) == real_batch_size:
+            train_examples_raw.append(cur_batch)
+    random.shuffle(train_examples_raw)
+    if data_args.max_examples is not None and len(train_examples_raw*real_batch_size)>data_args.max_examples:
+        train_examples_raw = train_examples_raw[:int(data_args.max_examples/real_batch_size)]
+    train_examples_raw_batch = train_examples_raw
+    train_examples_raw = []
+    for b in train_examples_raw_batch:
+        train_examples_raw += b
+    print(f'There are {len(train_examples_raw)} pairs to train in total')
     if data_args.debug_mode:
         train_examples_raw = train_examples_raw[:int(data_args.debug_mode)]
 
-    train_examples = {'query':[],'pos':[],'neg':[]}
+    train_examples = {'query':[],'pos':[],'neg':[],'task_id':[]}
     total_train_num = len(train_examples_raw)
     for i in range(total_train_num):
         cur_e = train_examples_raw[i]
@@ -363,9 +477,10 @@ def main():
                 cur_e[k][0] = ''
             assert cur_e[k][0].startswith('Represent ') or cur_e[k][0]==''
             train_examples[k].append('!@#$%^&**!@#$%^&**'.join(cur_e[k]))
+        train_examples['task_id'].append(cur_e['task_id'])
     raw_datasets = DatasetDict({'train':Dataset.from_dict(train_examples)})
 
-    model = SentenceTransformer(real_name_or_path, cache_folder=model_args.cache_dir)
+    model = INSTRUCTOR(real_name_or_path, cache_folder=model_args.cache_dir)
     column_names = raw_datasets["train"].column_names
 
     def preprocess_function(examples):
@@ -376,9 +491,9 @@ def main():
             concatenated_input_texts = []
             for local_idx in range(num):
                 splits = examples[key][local_idx].split('!@#$%^&**!@#$%^&**')
-                assert len(splits) == 3
+                assert len(splits) == 2
                 contexts.append(splits[0])
-                concatenated_input_texts.append(''.join(splits[:-1]))
+                concatenated_input_texts.append(''.join(splits))
                 assert isinstance(contexts[-1], str)
                 assert isinstance(concatenated_input_texts[-1], str)
             tokenized = tokenizer(concatenated_input_texts,padding='max_length', truncation='longest_first', return_tensors="pt", max_length=data_args.max_source_length)
@@ -395,6 +510,7 @@ def main():
                     all_tokenized[k] = all_tokenized[k].tolist()
             for k in keys:
                 all_tokenized[f'{key}_{k}'] = tokenized[k].tolist()
+        all_tokenized['task_id'] = examples['task_id']
         return all_tokenized
 
     train_dataset = raw_datasets["train"]
@@ -419,7 +535,7 @@ def main():
         pad_to_multiple_of=8 if training_args.fp16 else None,
     )
 
-    trainer = Seq2SeqTrainer(
+    trainer = InstructorTrainer(
         model=model,
         args=training_args,
         train_dataset=train_dataset,
@@ -427,7 +543,6 @@ def main():
         tokenizer=tokenizer,
         data_collator=data_collator,
         compute_metrics=None,
-        data_args=data_args,
     )
 
     checkpoint = None

@@ -31,8 +31,6 @@ class AbsTask(ABC):
         self.dataset = datasets.load_dataset(
             self.description["hf_hub_name"], 
             revision=self.description.get("revision", None),
-            # cache_dir='/home2/huggingface',
-            # cache_dir='/home2/huggingface/datasets',
         )
         self.data_loaded = True
 

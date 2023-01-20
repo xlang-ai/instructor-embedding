@@ -11,7 +11,19 @@ logger = logging.getLogger(__name__)
 from .Evaluator import Evaluator
 
 DEFINITIONS = {
-    'hku-nlp/instructor-large': {
+    'hkunlp/instructor-base': {
+        'STS12': 'Represent the statement, ',
+        'STS13': 'represent the statement, ',
+        'STS14': 'Represent the statement, ',
+        'STS15': 'Represent the post, ',
+        'STS16': 'Represent the post: ',
+        'STS17': 'Represent the sentence for classification: ',
+        'STS22': 'represent the statement: ',
+        'BIOSSES': 'Represent the Bio-medical statement: ',
+        'SICK-R': 'Represent the statement: ',
+        'STSBenchmark': 'represent the statement: ',
+    },
+    'hkunlp/instructor-large': {
         'STS12': 'Represent the statement: ',
         'STS13': 'represent the statement: ',
         'STS14': 'Represent the statement: ',
@@ -23,17 +35,17 @@ DEFINITIONS = {
         'SICK-R': 'Represent the statement: ',
         'STSBenchmark': 'represent the statement: ',
     },
-    'hku-nlp/instructor-xl': {
-        'STS12': 'Represent the sentence for retrieving duplicate sentences; Input: ',
-        'STS13': 'Represent a sentence for retrieving duplicate sentence; Input: ',
-        'STS14': 'Represent a sentence for retrieving duplicate sentence; Input: ',
-        'STS15': 'Represent a sentence for retrieving duplicate sentence; Input: ',
-        'STS16': 'Represent a sentence for retrieving duplicate sentences; Input: ',
-        'STS17': 'represent a sentence: ',
-        'STS22': 'Represent a sentence for retrieving duplicate sentence; Input: ',
-        'BIOSSES': 'Represent a Bio-medicine sentence for retrieving duplicate sentences; Input: ',
-        'SICK-R': 'Represent a sentence for retrieving duplicate sentence; Input: ',
-        'STSBenchmark': 'Represent a sentence for retrieving duplicate sentences; Input: ',
+    'hkunlp/instructor-xl': {
+        'STS12': 'represent texts, ',
+        'STS13': 'represent a casual post, ',
+        'STS14': 'Represent a post; ',
+        'STS15': 'Represent a posts,,, ',
+        'STS16': 'Represent posts: ',
+        'STS17': 'Represent a statement, ',
+        'STS22': 'represent the statement: ',
+        'BIOSSES': 'represent the Biological statement: ',
+        'SICK-R': 'Represent a post: ',
+        'STSBenchmark': 'represent posts, ',
     }
 }
 
@@ -66,7 +78,7 @@ class STSEvaluator(Evaluator):
 
         new_sentences = []
         if self.args.prompt:
-            print('with prompt')
+            print('with prompt: ', DEFINITIONS[self.args.prompt][self.args.task_name])
             for s in self.sentences2:
                 new_sentences.append([DEFINITIONS[self.args.prompt][self.args.task_name], s, 0])
             self.sentences2 = new_sentences

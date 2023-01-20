@@ -1,9 +1,9 @@
 import os
+import sys
 import logging
 import argparse
 from mteb import MTEB
-from sentence_transformers import SentenceTransformer
-
+from instructor import INSTRUCTOR
 
 logging.basicConfig(level=logging.INFO)
 
@@ -21,7 +21,7 @@ args = parser.parse_args()
 if not args.result_file.endswith('.txt') and not os.path.isdir(args.result_file):
     os.makedirs(args.result_file,exist_ok=True)
 
-model = SentenceTransformer(args.model_name,cache_folder=args.cache_dir)
+model = INSTRUCTOR(args.model_name,cache_folder=args.cache_dir)
 evaluation = MTEB(tasks=[args.task_name],task_langs=["en"])
 evaluation.run(model, output_folder=args.output_dir, eval_splits=[args.split],args=args,)
 

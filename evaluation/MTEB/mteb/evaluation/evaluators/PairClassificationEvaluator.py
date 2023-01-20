@@ -10,17 +10,23 @@ from .Evaluator import Evaluator
 logger = logging.getLogger(__name__)
 
 DEFINITIONS = {
-    'hku-nlp/instructor-large':
+    'hkunlp/instructor-base':
         {
             'TwitterSemEval2015': 'Represent the tweet post for retrieving duplicate comments: ',
             'TwitterURLCorpus': 'represent a tweet post for retrieval: ',
             'SprintDuplicateQuestions': 'represent the Sprint post for retrieving duplicate posts: ',
         },
-    'hku-nlp/instructor-xl':
+    'hkunlp/instructor-large':
         {
-            'TwitterSemEval2015': 'Represent the tweet post for retrieving duplicate comments; Input: ',
-            'TwitterURLCorpus': 'represent tweet post:\n',
-            'SprintDuplicateQuestions': 'represent the sprint post&',
+            'TwitterSemEval2015': 'Represent the tweet post for retrieving duplicate comments: ',
+            'TwitterURLCorpus': 'represent a tweet post for retrieval: ',
+            'SprintDuplicateQuestions': 'represent the Sprint post for retrieving duplicate posts: ',
+        },
+    'hkunlp/instructor-xl':
+        {
+            'TwitterSemEval2015': 'Represent the twitter post for retrieving comments: ',
+            'TwitterURLCorpus': 'represent a Twitter posts for retrieval: ',
+            'SprintDuplicateQuestions': 'represent the Sprint questions for retrieving relevant posts, ',
         },
 }
 
@@ -82,17 +88,7 @@ class PairClassificationEvaluator(Evaluator):
         emb_dict = {sent: emb for sent, emb in zip(sentences, embeddings)}
         embeddings1 = [emb_dict[sent] for sent in self.sentences1]
 
-        # embeddings1 = np.array(embeddings1)
-        # mean_emb = np.mean(embeddings1, axis=0)
-        # embeddings1 -= mean_emb
-        # embeddings1 = embeddings1.tolist()
-
         embeddings2 = [emb_dict[sent] for sent in self.sentences2]
-
-        # embeddings2 = np.array(embeddings2)
-        # mean_emb = np.mean(embeddings2, axis=0)
-        # embeddings2 -= mean_emb
-        # embeddings2 = embeddings2.tolist()
 
         logger.info("Computing similarity distances...")
         cosine_scores = 1 - paired_cosine_distances(embeddings1, embeddings2)
