@@ -3,18 +3,22 @@
 This repository contains the code and pre-trained models for our paper [One Embedder, Any Task: Instruction-Finetuned Text Embeddings](https://arxiv.org/abs/2212.09741). Please refer to our [project page](https://instructor-embedding.github.io/) for a quick project overview.
 
 We introduce **Instructor**👨‍🏫, an instruction-finetuned text embedding model that can generate text embeddings tailored to any task (e.g., classification, retrieval, clustering, text evaluation, etc.) and domains (e.g., science, finance, etc.) ***by simply providing the task instruction, without any finetuning***. Instructor👨‍ achieves sota on 70 diverse embedding tasks!
-<p align="center">
-  <img src="instructor.png" width="100%" align="middle" class="center"/>
-</p>
 
-## Installation
-We recommend Python 3.6 or higher. To establish the environment, run this code in the shell:
+## Get Started
+It is very easy to use INSTRUCTOR for any text embeddings. We recommend to first create a virtual environment:
 ```bash
 conda env create -n instructor python=3.7
-cd instructor
+git clone https://github.com/HKUNLP/instructor-embedding
+pip install -r requirements.txt
+```
+That will create the environment `instructor` we used. To use the embedding tool, first install the `InstructorEmbedding` package from PyPI
+```bash
+pip install InstructorEmbedding
+```
+or directly install it from our code
+```bash
 pip install -e .
 ```
-That will create the environment INSTRUCTOR we used.
 
 ### Environment setup
 
@@ -28,7 +32,7 @@ conda activate instructor
 First download a pretrained model
 
 ```python
-from instructor import INSTRUCTOR
+from InstructorEmbedding import INSTRUCTOR
 model = INSTRUCTOR('hkunlp/instructor-large')
 ```
 

@@ -40,6 +40,7 @@ DEFINITIONS = {
         'STS13': 'represent a casual post, ',
         'STS14': 'Represent a post; ',
         'STS15': 'Represent a posts,,, ',
+        # 'STS15': 'Represent a post for classification, ',
         'STS16': 'Represent posts: ',
         'STS17': 'Represent a statement, ',
         'STS22': 'represent the statement: ',

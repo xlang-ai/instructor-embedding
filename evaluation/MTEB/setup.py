@@ -38,6 +38,8 @@ To create the package for pypi.
 
 
 from setuptools import find_packages, setup
+print(find_packages())
+exit(0)
 
 
 with open("README.md", mode="r", encoding="utf-8") as readme_file:

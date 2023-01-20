@@ -72,6 +72,11 @@ DEFINITIONS = {
                 'query': 'Represent the Science question: ',
                 'corpus': 'Represent the Science document: '
             },
+        # 'SciDocsRR':
+        #     {
+        #         'query': 'Represent the Science question to retrieve a supporting document: ',
+        #         'corpus': 'Represent the Science document: '
+        #     },
         'MindSmallReranking':
             {
                 'query': 'Represent the news query for retrieving articles: ',
@@ -147,6 +152,7 @@ class RerankingEvaluator(Evaluator):
         if isinstance(self.samples[0]["query"], str):
             new_sentences = []
             if self.args.prompt:
+                print('with prompt')
                 if isinstance(DEFINITIONS[self.args.prompt][self.args.task_name], str):
                     instruction = DEFINITIONS[self.args.prompt][self.args.task_name]
                 else:
@@ -165,6 +171,7 @@ class RerankingEvaluator(Evaluator):
             all_query_flattened = [q for sample in self.samples for q in sample["query"]]
             new_sentences = []
             if self.args.prompt:
+                print('with prompt')
                 if isinstance(DEFINITIONS[self.args.prompt][self.args.task_name], str):
                     instruction = DEFINITIONS[self.args.prompt][self.args.task_name]
                 else:

@@ -15,6 +15,163 @@ DRES_METHODS = ["encode_queries", "encode_corpus"]
 DRPES_METHODS = ["start_multi_process_pool", "stop_multi_process_pool", "encode_queries", "encode_corpus", "encode_corpus_parallel"]
 
 DEFINITIONS = {
+    # 'hkunlp/instructor-xl update': {
+    #     'ClimateFEVER':
+    #         {
+    #             'query': 'Represent the Climate questions to retrieve a supporting document: ',
+    #             'corpus': 'Represent the Climate documents for retrieval: ',
+    #         },
+    #     'HotpotQA':
+    #         {
+    #             'query': 'Represent the Wikipedia questions to retrieve a supporting document: ',
+    #             'corpus': 'Represent the Wikipedia documents for retrieval: ',
+    #         },
+    #     'FEVER':
+    #         {
+    #             'query': 'Represent the Wikipedia facts to retrieve a supporting document: ',
+    #             'corpus': 'Represent the Wikipedia documents for retrieval: ',
+    #         },
+    #     'MSMARCO':
+    #         {
+    #             'query': 'Represent the questions to retrieve a supporting document: ',
+    #             'corpus': 'Represent the documents for retrieval: ',
+    #         },
+    #     'DBPedia 40.24':
+    #         {
+    #             'query': 'Represent the Wikipedia questions to retrieve a supporting document: ',
+    #             'corpus': 'Represent the Wikipedia documents for retrieval: ',
+    #         },
+    #     'DBPedia':
+    #         {
+    #             'query': 'Represent the Wikipedia questions for retrieving a supporting document: ',
+    #             'corpus': 'Represent the Wikipedia documents for retrieval: ',
+    #         },
+    #     'NQ 57.32':
+    #         {
+    #             'query': 'Represent the Wikipedia questions to retrieve a supporting document: ',
+    #             'corpus': 'Represent the Wikipedia documents for retrieval: ',
+    #         },
+    #     'NQ':
+    #         {
+    #             'query': 'Represent the Wikipedia questions for retrieving a supporting document: ',
+    #             'corpus': 'Represent the Wikipedia documents for retrieval: ',
+    #         },
+    #     'QuoraRetrieval':
+    #         {
+    #             'query': 'Represent the Quora question to retrieve question: ',
+    #             'corpus': 'Represent the Quora question to retrieve question: ',
+    #         },
+    #     'SCIDOCS':
+    #         {
+    #             'query': 'Represent the Science question: ',
+    #             'corpus': 'Represent the Science document: '
+    #         },
+    #     'TRECCOVID 71.4':
+    #         {
+    #             'query': 'Represent the Coronavirus questions to retrieve a supporting document: ',
+    #             'corpus': 'Represent the Coronavirus documents for retrieval: ',
+    #         },
+    #     'TRECCOVID':
+    #         {
+    #             'query': 'Represent the Coronavirus questions to retrieve a supporting document: ',
+    #             'corpus': 'Represent the Coronavirus documents: ',
+    #         },
+    #     'Touche2020 23.44':
+    #         {
+    #             'query': 'Represent questions: ',
+    #             'corpus': 'Represent arguments: ',
+    #         },
+    #     'Touche2020':
+    #         {
+    #             'query': 'Represent conversation questions: ',
+    #             'corpus': 'Represent conversation arguments: ',
+    #         },
+    #     'SciFact':
+    #         {
+    #             'query': 'Represent the Scientific queries for retrieving a supporting passage: ',
+    #             'corpus': 'represent the scientific paragraph for retrieval: ',
+    #         },
+    #     'NFCorpus':
+    #         {
+    #             'query': 'Represent the nutrition facts to retrieve Public medical articles: ',
+    #             'corpus': 'Represent the Public medical articles for retrieval: ',
+    #         },
+    #     'ArguAna 55.65':
+    #         {
+    #             'query': 'Represent Debating conversations to retrieve a counter-argument: ',
+    #             'corpus': 'Represent counter-arguments: ',
+    #         },
+    #     'ArguAna':
+    #         {
+    #             'query': 'Represent Debating conversation discourses to retrieve a counter-argument: ',
+    #             'corpus': 'Represent counter-arguments in debating: ',
+    #         },
+    #     'CQADupstackTexRetrieval':
+    #         {
+    #             'query': 'Represent the questions to retrieve a supporting answer: ',
+    #             'corpus': 'Represent the answers for retrieval: ',
+    #         },
+    #     'CQADupstackWebmastersRetrieval':
+    #         {
+    #             'query': 'Represent the Webmaster questions to retrieve a supporting answer: ',
+    #             'corpus': 'Represent the Webmaster answers for retrieval: ',
+    #         },
+    #     'CQADupstackEnglishRetrieval':
+    #         {
+    #             'query': 'Represent the English questions to retrieve a supporting document: ',
+    #             'corpus': 'Represent the English answers for retrieval: ',
+    #         },
+    #     'CQADupstackGamingRetrieval':
+    #         {
+    #             'query': 'Represent the Gaming questions to retrieve a supporting answer: ',
+    #             'corpus': 'Represent the Gaming answers for retrieval: ',
+    #         },
+    #     'CQADupstackGisRetrieval':
+    #         {
+    #             'query': 'Represent the Gis questions to retrieve a supporting answer: ',
+    #             'corpus': 'Represent the Gis answers for retrieval: ',
+    #         },
+    #     'CQADupstackUnixRetrieval':
+    #         {
+    #             'query': 'Represent the Unix questions to retrieve a supporting answer: ',
+    #             'corpus': 'Represent the Unix answers for retrieval: ',
+    #         },
+    #     'CQADupstackMathematicaRetrieval':
+    #         {
+    #             'query': 'Represent the Mathematical questions to retrieve a supporting answer: ',
+    #             'corpus': 'Represent the Mathematical answers for retrieval: ',
+    #         },
+    #     'CQADupstackStatsRetrieval':
+    #         {
+    #             'query': 'Represent the Statistical questions to retrieve a supporting answer: ',
+    #             'corpus': 'Represent the Statistical answers for retrieval: ',
+    #         },
+    #     'CQADupstackPhysicsRetrieval':
+    #         {
+    #             'query': 'Represent the Physics questions to retrieve a supporting answer: ',
+    #             'corpus': 'Represent the Physics answers for retrieval: ',
+    #         },
+    #     'CQADupstackProgrammersRetrieval':
+    #         {
+    #             'query': 'Represent the Programming questions to retrieve a supporting answer: ',
+    #             'corpus': 'Represent the Programming answers for retrieval: ',
+    #         },
+    #     'CQADupstackAndroidRetrieval':
+    #         {
+    #             'query': 'Represent the Android questions to retrieve a supporting answer: ',
+    #             'corpus': 'Represent the Android answers for retrieval: ',
+    #         },
+    #     'CQADupstackWordpressRetrieval':
+    #         {
+    #             'query': 'Represent the Wordpress questions to retrieve a supporting answer: ',
+    #             'corpus': 'Represent the Wordpress answers for retrieval: ',
+    #         },
+    #     'FiQA2018':
+    #         {
+    #             'query': 'Represent the finance questions to retrieve a supporting answer: ',
+    #             'corpus': 'Represent the finance answers for retrieval: ',
+    #         },
+    # },
     'hkunlp/instructor-xl': {
         'ClimateFEVER':
             {
@@ -557,6 +714,7 @@ class DRESModel:
 
     def encode_queries(self, queries: List[str], batch_size: int, **kwargs):
         new_sentences = []
+        print('encode queries')
         if self.args.prompt and isinstance(DEFINITIONS[self.args.prompt][self.args.task_name],str):
             instruction = DEFINITIONS[self.args.prompt][self.args.task_name]
         elif self.args.prompt:
@@ -567,10 +725,12 @@ class DRESModel:
         else:
             new_sentences = queries
 
+        kwargs['show_progress_bar'] = False
         return self.model.encode(new_sentences, batch_size=batch_size, **kwargs)
 
     def encode_corpus(self, corpus: List[Dict[str, str]], batch_size: int, **kwargs):
         self.count += 1
+        # print('count: ',self.count)
         if type(corpus) is dict:
             sentences = [
                 (corpus["title"][i] + ' ' + corpus["text"][i]).strip()
@@ -587,6 +747,7 @@ class DRESModel:
         instruction = DEFINITIONS[self.args.prompt][self.args.task_name]['corpus']
         for s in sentences:
             new_sentences.append([instruction, s, 0])
+        # kwargs['show_progress_bar'] = False
         return self.model.encode(sentences, batch_size=128, **kwargs)
 
     def encode_corpus_parallel(

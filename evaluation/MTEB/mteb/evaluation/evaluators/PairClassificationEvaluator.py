@@ -88,7 +88,17 @@ class PairClassificationEvaluator(Evaluator):
         emb_dict = {sent: emb for sent, emb in zip(sentences, embeddings)}
         embeddings1 = [emb_dict[sent] for sent in self.sentences1]
 
+        # embeddings1 = np.array(embeddings1)
+        # mean_emb = np.mean(embeddings1, axis=0)
+        # embeddings1 -= mean_emb
+        # embeddings1 = embeddings1.tolist()
+
         embeddings2 = [emb_dict[sent] for sent in self.sentences2]
+
+        # embeddings2 = np.array(embeddings2)
+        # mean_emb = np.mean(embeddings2, axis=0)
+        # embeddings2 -= mean_emb
+        # embeddings2 = embeddings2.tolist()
 
         logger.info("Computing similarity distances...")
         cosine_scores = 1 - paired_cosine_distances(embeddings1, embeddings2)

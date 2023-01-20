@@ -21,6 +21,10 @@ args = parser.parse_args()
 if not args.result_file.endswith('.txt') and not os.path.isdir(args.result_file):
     os.makedirs(args.result_file,exist_ok=True)
 
+# from tqdm import tqdm
+# from functools import partialmethod
+#
+# tqdm.__init__ = partialmethod(tqdm.__init__, disable=True)
 model = INSTRUCTOR(args.model_name,cache_folder=args.cache_dir)
 evaluation = MTEB(tasks=[args.task_name],task_langs=["en"])
 evaluation.run(model, output_folder=args.output_dir, eval_splits=[args.split],args=args,)

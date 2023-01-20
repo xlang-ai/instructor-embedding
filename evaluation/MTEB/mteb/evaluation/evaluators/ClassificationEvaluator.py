@@ -79,6 +79,7 @@ DEFINITIONS = {
         'Banking77Classification': 'Represent the bank77 purposes for retrieving its bank intent: ',
         'EmotionClassification':  'Represent the amazon emotion sentence for classifying the emotion: ',
         'AmazonCounterfactualClassification': 'Represent Daily casual counter-sentences for categorization as correct-sentences or counter-sentences: ',
+        # 'AmazonCounterfactualClassification': 'Represent Daily casual counter-sentences for categorization as correct-sentences or counter-sentences: ',
         'ImdbClassification': 'Represent a review sentence for classifying emotion as positive or negative: ',
         'MassiveIntentClassification':'Represent the sentence for categorizing its task intent as qa_maths, takeaway_order, '
                                        'audio_volume_other, recommendation_movies, iot_cleaning, qa_stock, '
@@ -87,9 +88,13 @@ DEFINITIONS = {
         'MTOPDomainClassification': 'represent a MTO sentence to retrieve the task intention: ',
         'MTOPIntentClassification': 'Represent an mto sentence for retrieving its behind task intention: ',
         'ToxicConversationsClassification': 'Represent a toxicity comment for classifying its toxicity as toxic or non-toxic: ',
+        # 'ToxicConversationsClassification': 'Represent toxicity comments for classifying its toxicity as toxic or non-toxic: ',
         'AmazonPolarityClassification': 'Represent the sentiment comment for retrieving a duplicate sentence: ',
+        # 'AmazonPolarityClassification': 'Represent the sentiment comment to retrieve a duplicate sentence: ',
         'AmazonReviewsClassification': 'Represent an amazon review sentence to find the emoation; ',
+        # 'AmazonReviewsClassification': 'Represent an amazon movie review sentence to categorize the emotion; ',
         'TweetSentimentExtractionClassification': 'Represent Daily-life spoken sentences for categorization; Input: ',
+        # 'TweetSentimentExtractionClassification': 'Represent Daily-life spoken expression for classification; Input: ',
     },
 }
 
