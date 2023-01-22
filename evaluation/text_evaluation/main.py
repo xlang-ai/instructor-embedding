@@ -6,7 +6,7 @@ import os, json
 import torch
 from scipy.stats.stats import pearsonr
 from filelock import FileLock
-from instructor import INSTRUCTOR
+from InstructorEmbedding import INSTRUCTOR
 
 np.random.seed(0)
 

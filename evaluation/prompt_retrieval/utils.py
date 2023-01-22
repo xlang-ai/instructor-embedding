@@ -3,7 +3,7 @@ import openai
 import json
 import os
 from tqdm import tqdm
-from instructor_new import INSTRUCTOR
+from InstructorEmbedding import INSTRUCTOR
 from collections import OrderedDict
 import sqlparse
 

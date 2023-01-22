@@ -3,7 +3,7 @@ import sys
 import logging
 import argparse
 from mteb import MTEB
-from instructor import INSTRUCTOR
+from InstructorEmbedding import INSTRUCTOR
 
 logging.basicConfig(level=logging.INFO)
 

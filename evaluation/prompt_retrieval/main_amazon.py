@@ -10,7 +10,7 @@ from torch import nn
 from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
 from transformers import AutoTokenizer,AutoModelForCausalLM
-from sentence_transformers import SentenceTransformer
+from InstructorEmbedding import INSTRUCTOR
 from datasets import load_dataset
 from sklearn.metrics import f1_score
 from MetaICL.metaicl.data import MetaICLData
@@ -60,7 +60,7 @@ def calculate_sentence_transformer_embedding(examples,embedding_model,mean_norma
     else:
         text_to_encode = [['Represent the amazon review; Input: ',raw_item['text'],0] for raw_item in examples]
     num = len(text_to_encode)
-    emb_model = SentenceTransformer(embedding_model)
+    emb_model = INSTRUCTOR(embedding_model)
     embeddings = []
     bar = tqdm(range(0,num,20),desc='calculate embeddings')
     for i in range(0,num,20):

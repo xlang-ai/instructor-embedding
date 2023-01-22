@@ -18,7 +18,7 @@ from bridge_content_encoder import get_database_matches
 from transformers import AutoTokenizer
 from tqdm import tqdm
 from torch import nn
-from sentence_transformers import SentenceTransformer
+from InstructorEmbedding import INSTRUCTOR
 from sklearn.metrics.pairwise import cosine_similarity
 from collections import defaultdict
 from utils import codex_execution

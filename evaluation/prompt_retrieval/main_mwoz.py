@@ -6,7 +6,7 @@ import numpy as np
 import time
 from tqdm import tqdm
 from torch import nn
-from sentence_transformers import SentenceTransformer
+from InstructorEmbedding import INSTRUCTOR
 from transformers import AutoTokenizer
 from collections import defaultdict
 from utils import slot_values_to_seq_sql,table_prompt,PreviousStateRecorder,codex_completion,sql_pred_parse,typo_fix
@@ -121,7 +121,7 @@ def v2_vote_k_select(embeddings,examples,select_num,k,vote_file=None):
 def calculate_sentence_transformer_embedding(examples,embedding_model,mean_normal=False):
     text_to_encode = [e['history'] for e in examples]
     num = len(text_to_encode)
-    emb_model = SentenceTransformer(embedding_model)
+    emb_model = INSTRUCTOR(embedding_model)
     embeddings = []
     bar = tqdm(range(0,num,20),desc='calculate embeddings')
     for i in range(0,num,20):
@@ -135,7 +135,7 @@ def calculate_sentence_transformer_embedding(examples,embedding_model,mean_norma
 
 def calculate_one_embed(example,embedding_model):
     text_to_encode = example['history']
-    emb_model = SentenceTransformer(embedding_model)
+    emb_model = INSTRUCTOR(embedding_model)
     emb = emb_model.encode(text_to_encode)
     return emb
 

@@ -12,7 +12,7 @@ from datasets import load_metric
 from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
 from transformers import AutoTokenizer,AutoModelForCausalLM
-from sentence_transformers import SentenceTransformer
+from InstructorEmbedding import INSTRUCTOR
 from datasets import load_dataset
 from sklearn.metrics import f1_score
 from MetaICL.metaicl.data import MetaICLData
@@ -65,7 +65,7 @@ def calculate_sentence_transformer_embedding(examples,embedding_model,mean_norma
     else:
         text_to_encode = [f'{raw_item["sentence"]}\n{raw_item["question"]}' for raw_item in examples]
     num = len(text_to_encode)
-    emb_model = SentenceTransformer(embedding_model,cache_folder=args.model_cache_dir)
+    emb_model = INSTRUCTOR(embedding_model,cache_folder=args.model_cache_dir)
     embeddings = []
     bar = tqdm(range(0,num,20),desc='calculate embeddings')
     for i in range(0,num,20):

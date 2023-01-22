@@ -16,7 +16,7 @@ from tqdm import tqdm
 from datasets import load_metric
 from transformers import GPTJForCausalLM,AutoModelForSeq2SeqLM
 from transformers import AutoTokenizer,AutoModelForCausalLM,pipeline
-from sentence_transformers import SentenceTransformer
+from InstructorEmbedding import INSTRUCTOR
 from datasets import load_dataset
 from sklearn.metrics import f1_score
 from collections import defaultdict
@@ -66,7 +66,7 @@ def calculate_sentence_transformer_embedding(examples,embedding_model,descriptio
     else:
         text_to_encode = [raw_item['text'] for raw_item in examples]
     num = len(text_to_encode)
-    emb_model = SentenceTransformer(embedding_model,cache_folder=args.model_cache_dir)
+    emb_model = INSTRUCTOR(embedding_model,cache_folder=args.model_cache_dir)
     embeddings = []
     bar = tqdm(range(0,num,20),desc=description)
     for i in range(0,num,20):
