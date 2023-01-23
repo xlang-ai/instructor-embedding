@@ -187,7 +187,7 @@ class MetaICLModel(object):
                 if global_step % gradient_accumulation_steps == 0:
                     torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_grad_norm)
 
-                    self.optimizer.step()    # We have accumulated enought gradients
+                    self.optimizer.step()    # We have accumulated enough gradients
                     if self.scheduler is not None:
                         self.scheduler.step()
                     self.model.zero_grad()
