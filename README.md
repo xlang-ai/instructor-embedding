@@ -4,8 +4,8 @@ This repository contains the code and pre-trained models for our paper [One Embe
 
 We introduce **Instructor**👨‍🏫, an instruction-finetuned text embedding model that can generate text embeddings tailored to any task (e.g., classification, retrieval, clustering, text evaluation, etc.) and domains (e.g., science, finance, etc.) ***by simply providing the task instruction, without any finetuning***. Instructor👨‍ achieves sota on 70 diverse embedding tasks!
 
-## Get Started
-It is very easy to use INSTRUCTOR for any text embeddings. We recommend to first create a virtual environment:
+## Installation
+It is very easy to use INSTRUCTOR for any text embeddings. You can easily try it out in [Colab notebook](https://colab.research.google.com/drive/1P7ivNLMosHyG7XOHmoh7CoqpXryKy3Qt?usp=sharing). In your local machine, we recommend to first create a virtual environment:
 ```bash
 conda env create -n instructor python=3.7
 git clone https://github.com/HKUNLP/instructor-embedding
@@ -86,7 +86,7 @@ embeddings_b = model.encode(sentences_b)
 similarities = cosine_similarity(embeddings_a,embeddings_b)
 ```
 
-### Use customized embeddings for information retrieval.
+### Use customized embeddings for information retrieval
 ```python
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
