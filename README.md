@@ -4,6 +4,30 @@ This repository contains the code and pre-trained models for our paper [One Embe
 
 We introduce **Instructor**👨‍🏫, an instruction-finetuned text embedding model that can generate text embeddings tailored to any task (e.g., classification, retrieval, clustering, text evaluation, etc.) and domains (e.g., science, finance, etc.) ***by simply providing the task instruction, without any finetuning***. Instructor👨‍ achieves sota on 70 diverse embedding tasks!
 
+**************************** **Updates** ****************************
+
+* 01/21: We updated the code structure, which supports easy package installation.
+* 12/28: We updated the [checkpoint](https://huggingface.co/hkunlp/instructor-large) with hard negatives.
+* 12/20: We released [our paper](https://arxiv.org/abs/2212.09741), [code](https://github.com/HKUNLP/instructor-embedding), [project page](https://instructor-embedding.github.io/) and [checkpoint](https://huggingface.co/hkunlp/instructor-large). Check them out!
+
+## Quick Links
+
+  - [Installation](#Installation)
+  - [Getting Started](#getting-started)
+  - [Model List](#model-list)
+  - [Use Cases](#use-cases)
+    - [Calculate embeddings for your customized texts](#calculate-embeddings-for-your-customized-texts)
+    - [Compute similarities between texts](#compute-similarities-between-texts)
+    - [Information retrieval](#use-customized-embeddings-for-information-retrieval)
+    - [Clustering](#use-customized-embeddings-for-clustering)
+  - [Training](#training)
+  - [Evaluation](#evaluation)
+    - [MTEB](#mteb)
+    - [Billboard](#billboard)
+    - [Prompt Retrieval](#prompt-retrieval)
+  - [Bugs or questions?](#bugs-or-questions)
+  - [Citation](#citation)
+
 ## Installation
 It is very easy to use INSTRUCTOR for any text embeddings. You can easily try it out in [Colab notebook](https://colab.research.google.com/drive/1P7ivNLMosHyG7XOHmoh7CoqpXryKy3Qt?usp=sharing). In your local machine, we recommend to first create a virtual environment:
 ```bash
@@ -29,7 +53,7 @@ conda activate instructor
 
 ## Getting Started
 
-First download a pretrained model
+First download a pretrained model (See [model list](#model-list) for a full list of available models)
 
 ```python
 from InstructorEmbedding import INSTRUCTOR
@@ -63,6 +87,15 @@ for pair, embedding in zip(text_instruction_pairs, customized_embeddings):
     print("")
 ```
 
+## Model List
+
+We released a series of INSTRUCTOR checkpoints with different sizes. You can easily load these models with `InstructorEmbedding` package. 
+|              Model              | Avg. Score |
+|:-------------------------------|:--------:|
+|  [hkunlp/instructor-base](https://huggingface.co/hkunlp/instructor-base) |   55.9 |
+| [hkunlp/instructor-large](https://huggingface.co/hkunlp/instructor-large) |   58.4  |
+|    [hkunlp/instructor-xl](https://huggingface.co/hkunlp/instructor-xl)    |   58.8  |
+
 ## Use Cases
 We provide a few specific use cases in the following. For more examples and applications, refer to [our paper](https://arxiv.org/abs/2212.09741)
 ### Calculate embeddings for your customized texts
@@ -77,10 +110,10 @@ If you want to calculate customized embeddings for specific sentences, you may f
 You can use **INSTRUCTOR** to compute similarities between two groups of sentences, with **customized embeddings**.
 ```python
 from sklearn.metrics.pairwise import cosine_similarity
-sentences_a = [['Represent the Science sentence: ','Parton energy loss in QCD matter',0], 
-               ['Represent the Financial statement: ','The Federal Reserve on Wednesday raised its benchmark interest rate.',0]]
-sentences_b = [['Represent the Science sentence: ','The Chiral Phase Transition in Dissipative Dynamics', 0],
-               ['Represent the Financial statement: ','The funds rose less than 0.5 per cent on Friday',0]]
+sentences_a = [['Represent the Science sentence: ','Parton energy loss in QCD matter'], 
+               ['Represent the Financial statement: ','The Federal Reserve on Wednesday raised its benchmark interest rate.']]
+sentences_b = [['Represent the Science sentence: ','The Chiral Phase Transition in Dissipative Dynamics'],
+               ['Represent the Financial statement: ','The funds rose less than 0.5 per cent on Friday']]
 embeddings_a = model.encode(sentences_a)
 embeddings_b = model.encode(sentences_b)
 similarities = cosine_similarity(embeddings_a,embeddings_b)
@@ -90,10 +123,10 @@ similarities = cosine_similarity(embeddings_a,embeddings_b)
 ```python
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-query  = [['Represent the Wikipedia question for retrieving supporting documents: ','where is the food stored in a yam plant',0]]
-corpus = [['Represent the Wikipedia document for retrieval: ','Capitalism has been dominant in the Western world since the end of feudalism, but most feel[who?] that the term "mixed economies" more precisely describes most contemporary economies, due to their containing both private-owned and state-owned enterprises. In capitalism, prices determine the demand-supply scale. For example, higher demand for certain goods and services lead to higher prices and lower demand for certain goods lead to lower prices.', 0],
-          ['Represent the Wikipedia document for retrieval: ',"The disparate impact theory is especially controversial under the Fair Housing Act because the Act regulates many activities relating to housing, insurance, and mortgage loansâ€”and some scholars have argued that the theory's use under the Fair Housing Act, combined with extensions of the Community Reinvestment Act, contributed to rise of sub-prime lending and the crash of the U.S. housing market and ensuing global economic recession",0],
-          ['Represent the Wikipedia document for retrieval: ','Disparate impact in United States labor law refers to practices in employment, housing, and other areas that adversely affect one group of people of a protected characteristic more than another, even though rules applied by employers or landlords are formally neutral. Although the protected classes vary by statute, most federal civil rights laws protect based on race, color, religion, national origin, and sex as protected traits, and some laws include disability status and other traits as well.',0]]
+query  = [['Represent the Wikipedia question for retrieving supporting documents: ','where is the food stored in a yam plant']]
+corpus = [['Represent the Wikipedia document for retrieval: ','Capitalism has been dominant in the Western world since the end of feudalism, but most feel[who?] that the term "mixed economies" more precisely describes most contemporary economies, due to their containing both private-owned and state-owned enterprises. In capitalism, prices determine the demand-supply scale. For example, higher demand for certain goods and services lead to higher prices and lower demand for certain goods lead to lower prices.'],
+          ['Represent the Wikipedia document for retrieval: ',"The disparate impact theory is especially controversial under the Fair Housing Act because the Act regulates many activities relating to housing, insurance, and mortgage loansâ€”and some scholars have argued that the theory's use under the Fair Housing Act, combined with extensions of the Community Reinvestment Act, contributed to rise of sub-prime lending and the crash of the U.S. housing market and ensuing global economic recession"],
+          ['Represent the Wikipedia document for retrieval: ','Disparate impact in United States labor law refers to practices in employment, housing, and other areas that adversely affect one group of people of a protected characteristic more than another, even though rules applied by employers or landlords are formally neutral. Although the protected classes vary by statute, most federal civil rights laws protect based on race, color, religion, national origin, and sex as protected traits, and some laws include disability status and other traits as well.']]
 query_embeddings = model.encode(query)
 corpus_embeddings = model.encode(corpus)
 similarities = cosine_similarity(query_embeddings,corpus_embeddings)
@@ -104,11 +137,11 @@ print(retrieved_doc_id)
 ### Use customized embeddings for clustering
 ```python
 import sklearn.cluster
-sentences = [['Represent the Medicine sentence for clustering: ','Dynamical Scalar Degree of Freedom in Horava-Lifshitz Gravity', 0],
-             ['Represent the Medicine sentence for clustering: ','Comparison of Atmospheric Neutrino Flux Calculations at Low Energies', 0],
-             ['Represent the Medicine sentence for clustering: ','Fermion Bags in the Massive Gross-Neveu Model', 0],
-             ['Represent the Medicine sentence for clustering: ',"QCD corrections to Associated t-tbar-H production at the Tevatron",0],
-             ['Represent the Medicine sentence for clustering: ','A New Analysis of the R Measurements: Resonance Parameters of the Higher,  Vector States of Charmonium',0]]
+sentences = [['Represent the Medicine sentence for clustering: ','Dynamical Scalar Degree of Freedom in Horava-Lifshitz Gravity'],
+             ['Represent the Medicine sentence for clustering: ','Comparison of Atmospheric Neutrino Flux Calculations at Low Energies'],
+             ['Represent the Medicine sentence for clustering: ','Fermion Bags in the Massive Gross-Neveu Model'],
+             ['Represent the Medicine sentence for clustering: ',"QCD corrections to Associated t-tbar-H production at the Tevatron"],
+             ['Represent the Medicine sentence for clustering: ','A New Analysis of the R Measurements: Resonance Parameters of the Higher,  Vector States of Charmonium']]
 embeddings = model.encode(sentences)
 clustering_model = sklearn.cluster.MiniBatchKMeans(n_clusters=2)
 clustering_model.fit(embeddings)
