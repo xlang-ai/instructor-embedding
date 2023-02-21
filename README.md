@@ -161,10 +161,10 @@ with Instructions (MEDI), consisting of a collection of 330 datasets from [Super
 ]
 ```
 Each instance consists of a query, a positive pair, a negative pair and the id of the task, which is used to ensure data in the same training batch are from the same task.
-The MEDI data is available to be downloaded at [this link](https://drive.google.com/file/d/1_Ax8rTeeDKpNxj85LD2Yh7qsh3sYEiSH/view?usp=sharing).
+The MEDI data is available to be downloaded at [this link](https://drive.google.com/file/d/1vZ5c2oJNonGOvXzppNg5mHz24O6jcc52/view?usp=sharing).
 
 ### Train INSTRUCTOR
-We provide the example script for training INSTRUCTOR. You may need to first download the [MEDI data](https://drive.google.com/file/d/1_Ax8rTeeDKpNxj85LD2Yh7qsh3sYEiSH/view?usp=sharing), unzip the folder and put `medi-data.json` under `--cache_dir`.
+We provide the example script for training INSTRUCTOR. You may need to first download the [MEDI data](https://drive.google.com/file/d/1vZ5c2oJNonGOvXzppNg5mHz24O6jcc52/view?usp=sharing), unzip the folder and put `medi-data.json` under `--cache_dir`.
 ```python
 python train.py --model_name_or_path sentence-transformers/gtr-t5-large --output_dir {output_directory} --cache_dir {cache_directory} --max_source_length 512 --num_train_epochs 10 --save_steps 500 --cl_temperature 0.01 --warmup_ratio 0.1 --learning_rate 2e-5 --overwrite_output_dir
 ```
