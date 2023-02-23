@@ -15,13 +15,13 @@ from .Evaluator import Evaluator
 
 DEFINITIONS = {
     'hkunlp/instructor-xl': {
-        'SummEval': 'represent a biological statement to retrieve duplicate statements: ',
+        'SummEval': 'Represent the news statement for retrieval: ',
     },
     'hkunlp/instructor-large': {
-        'SummEval': 'Represent a Bio-medicine sentence for retrieving duplicate sentences: ',
+        'SummEval': 'Represent the news sentence for retrieval: ',
     },
     'hkunlp/instructor-base': {
-        'SummEval': 'Represent a Bio-medicine sentence for retrieving duplicate sentences: ',
+        'SummEval': 'Represent the news sentence for retrieval: ',
     }
 
 }
