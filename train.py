@@ -440,7 +440,7 @@ def main():
     total_n = len(old_train_examples_raw)
     real_batch_size = max(training_args.per_device_train_batch_size,
                           training_args.per_device_train_batch_size * torch.cuda.device_count())
-    print('real_batch_size: ', real_batch_size,training_args.per_device_train_batch_size,torch.cuda.device_count())
+    # print('real_batch_size: ', real_batch_size,training_args.per_device_train_batch_size,torch.cuda.device_count())
     for idx in range(0, total_n, real_batch_size):
         local_task_name = old_train_examples_raw[idx]['task_name']
         cur_batch = []
@@ -466,7 +466,9 @@ def main():
         train_examples_raw = train_examples_raw[:int(data_args.debug_mode)]
 
     train_examples = {'query':[],'pos':[],'neg':[],'task_name':[]}
+    task_name_map = {}
     total_train_num = len(train_examples_raw)
+    task_count = 0
     for i in range(total_train_num):
         cur_e = train_examples_raw[i]
         for k in ['query','pos','neg']:
@@ -477,7 +479,10 @@ def main():
                 cur_e[k][0] = ''
             assert cur_e[k][0].startswith('Represent ') or cur_e[k][0]==''
             train_examples[k].append('!@#$%^&**!@#$%^&**'.join(cur_e[k]))
-        train_examples['task_name'].append(cur_e['task_name'])
+        if not cur_e['task_name'] in task_name_map:
+            task_name_map[cur_e['task_name']] = task_count
+            task_count += 1
+        train_examples['task_name'].append(task_name_map[cur_e['task_name']])
     raw_datasets = DatasetDict({'train':Dataset.from_dict(train_examples)})
 
     model = INSTRUCTOR(real_name_or_path, cache_folder=model_args.cache_dir)
