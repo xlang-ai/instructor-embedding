@@ -447,7 +447,7 @@ def main():
         include_batch = True
         for idx1 in range(idx, min(idx + real_batch_size, total_n)):
             if not old_train_examples_raw[idx1]['task_name'] == local_task_name:
-                print(f'one batch in task {old_train_examples_raw[idx1]["task_id"]} is skipped')
+                print(f'one batch in task {old_train_examples_raw[idx1]["task_name"]} is skipped')
                 include_batch = False
                 break
             else:
