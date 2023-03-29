@@ -7,7 +7,7 @@ import torch.multiprocessing as mp
 
 from .AbsTask import AbsTask
 from transformers import AutoTokenizer
-
+from sentence_transformers import SentenceTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -685,6 +685,7 @@ class DRESModel:
         self.model = model
         self.sep = sep
         self.args = kwargs['args']
+        self.current_dataset = kwargs['current_dataset']
         self.tokenizer = AutoTokenizer.from_pretrained(self.args.model_name)
         self.count = 0
 
@@ -698,7 +699,7 @@ class DRESModel:
 
         for process_id, device_name in enumerate(target_devices):
             p = ctx.Process(
-                target=sentence_transformer_encode_multi_process_worker,
+                target=SentenceTransformer._encode_multi_process_worker,
                 args=(process_id, device_name, self.model, input_queue, output_queue),
                 daemon=True,
             )
@@ -714,14 +715,17 @@ class DRESModel:
 
     def encode_queries(self, queries: List[str], batch_size: int, **kwargs):
         new_sentences = []
-        print('encode queries')
-        if self.args.prompt and isinstance(DEFINITIONS[self.args.prompt][self.args.task_name],str):
-            instruction = DEFINITIONS[self.args.prompt][self.args.task_name]
-        elif self.args.prompt:
-            instruction = DEFINITIONS[self.args.prompt][self.args.task_name]['query']
+        print('encode queries..')
+        if self.args.prompt and self.current_dataset in DEFINITIONS[self.args.prompt] and isinstance(DEFINITIONS[self.args.prompt][self.current_dataset],str):
+            instruction = DEFINITIONS[self.args.prompt][self.current_dataset]
+        elif self.args.prompt and self.current_dataset in DEFINITIONS[self.args.prompt]:
+            instruction = DEFINITIONS[self.args.prompt][self.current_dataset]['query']
+
         if self.args.prompt:
-            for s in queries:
-                new_sentences.append([instruction, s, 0])
+            for i in range(len(queries["id"])):
+                if "prepend" in queries and queries['prepend'][i]: # use the instruction if exists in the data
+                    instruction = queries['prepend'][i]
+                new_sentences.append([instruction, queries['text'][i]])
         else:
             new_sentences = queries
 
@@ -753,19 +757,44 @@ class DRESModel:
     def encode_corpus_parallel(
         self, corpus: List[Dict[str, str]], pool: Dict[str, object], batch_size: int, chunk_id: int, **kwargs
     ):
+        corpus_instruction = ""
+        if self.current_dataset in DEFINITIONS[self.args.prompt] and DEFINITIONS[self.args.prompt][self.current_dataset]['corpus']:
+            corpus_instruction = DEFINITIONS[self.args.prompt][self.current_dataset]['corpus']
         if type(corpus) is dict:
-            sentences = [
-                (corpus["title"][i] + self.sep + corpus["text"][i]).strip()
-                if "title" in corpus
-                else corpus["text"][i].strip()
-                for i in range(len(corpus["text"]))
-            ]
+            sentences = []
+            for i in range(len(corpus["text"])):
+                prepend = ""
+                if not self.args.dont_corpus_prepend and "prepend" in corpus:
+                    prepend = corpus['prepend'][i]
+                if prepend:
+                    corpus_instruction = prepend
+                if "title" in corpus:
+                    # preprened_corpus_sentence = (corpus_instruction + corpus["title"][i] + self.sep + corpus["text"][i]).strip()
+                    preprened_corpus_sentence = (corpus["title"][i] + self.sep + corpus["text"][i]).strip()
+                else:
+                    preprened_corpus_sentence = corpus["text"][i].strip()
+                if corpus_instruction:
+                    sentences.append([corpus_instruction, preprened_corpus_sentence])
+                else:
+                    sentences.append(preprened_corpus_sentence)
         else:
-            sentences = [
-                (doc["title"] + self.sep + doc["text"]).strip() if "title" in doc else doc["text"].strip()
-                for doc in corpus
-            ]
-
+            sentences = []
+            for doc in corpus:
+                prepend = ""
+                if not self.args.dont_corpus_prepend and "prepend" in doc:
+                    prepend = doc['prepend']
+                if prepend:
+                    corpus_instruction = prepend
+                if "title" in doc:
+                    # preprened_corpus_sentence = (corpus_instruction + doc["title"] + self.sep + doc["text"]).strip() 
+                    preprened_corpus_sentence = (doc["title"] + self.sep + doc["text"]).strip() 
+                else:
+                    preprened_corpus_sentence = doc["text"].strip()
+                if corpus_instruction:
+                    sentences.append([corpus_instruction, preprened_corpus_sentence])
+                else:
+                    sentences.append(preprened_corpus_sentence)
+            
         if chunk_id is not None and chunk_id >= len(pool["processes"]):
             output_queue = pool["output"]
             output_queue.get()

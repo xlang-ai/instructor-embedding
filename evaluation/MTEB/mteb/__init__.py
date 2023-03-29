@@ -1,3 +1,3 @@
 __version__ = "1.0.1.dev0"
 
-from mteb.evaluation import *
+from evaluation.MTEB.mteb.evaluation import *

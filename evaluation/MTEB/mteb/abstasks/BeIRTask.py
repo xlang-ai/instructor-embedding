@@ -33,17 +33,21 @@ class BeIRTask(AbsTask):
             eval_splits = self.description["eval_splits"]
         dataset = self.description["beir_name"]
         dataset, sub_dataset = dataset.split("/") if "cqadupstack" in dataset else (dataset, None)
-
+        download_path = '/data/ashok-4983/instructor-embedding/evaluation/MTEB/data'
         self.corpus, self.queries, self.relevant_docs = {}, {}, {}
         for split in eval_splits:
             if USE_BEIR_DEVELOPMENT:
+                hf_repo = f"BeIR/{dataset}"
+                data_folder = ""
+                if self.description.get("is_custom_dataset", False):
+                    hf_repo = ""
+                    data_folder = f"{download_path}/{dataset}"
                 self.corpus[split], self.queries[split], self.relevant_docs[split] = BeirDataLoader(
-                    hf_repo=f"BeIR/{dataset}"
+                    hf_repo=hf_repo, data_folder=data_folder
                 ).load(split=split)
             else:
                 url = f"https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/{dataset}.zip"
                 # download_path = os.path.join(datasets.config.HF_DATASETS_CACHE, "BeIR")
-                download_path = os.path.join('/home2/huggingface/datasets', "BeIR")
                 # download_path = os.path.join('/gscratch/zlab/swj0419', "BeIR")
                 data_path = util.download_and_unzip(url, download_path)
                 data_path = f"{data_path}/{sub_dataset}" if sub_dataset else data_path

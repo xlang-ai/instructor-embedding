@@ -476,6 +476,34 @@ class INSTRUCTOR(SentenceTransformer):
 
         return modules
 
+    def get_embeddings(self, features, output_value, normalize_embeddings, convert_to_numpy, device):
+        features = batch_to_device(features, device)
+        with torch.no_grad():
+            out_features = self.forward(features)
+
+            if output_value == 'token_embeddings':
+                embeddings = []
+                for token_emb, attention in zip(out_features[output_value], out_features['attention_mask']):
+                    last_mask_id = len(attention)-1
+                    while last_mask_id > 0 and attention[last_mask_id].item() == 0:
+                        last_mask_id -= 1
+
+                    embeddings.append(token_emb[0:last_mask_id+1])
+            elif output_value is None:  #Return all outputs
+                embeddings = []
+                for sent_idx in range(len(out_features['sentence_embedding'])):
+                    row =  {name: out_features[name][sent_idx] for name in out_features}
+                    embeddings.append(row)
+            else:   #Sentence embeddings
+                embeddings = out_features[output_value]
+                embeddings = embeddings.detach()
+                if normalize_embeddings:
+                    embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
+                # fixes for #522 and #487 to avoid oom problems on gpu with large datasets
+                if convert_to_numpy:
+                    embeddings = embeddings.cpu()
+            return embeddings
+
     def encode(self, sentences,
                batch_size: int = 32,
                show_progress_bar: bool = None,
@@ -521,49 +549,35 @@ class INSTRUCTOR(SentenceTransformer):
         self.to(device)
 
         all_embeddings = []
-        if isinstance(sentences[0],list):
-            lengths = []
-            for sen in sentences:
-                lengths.append(-self._text_length(sen[1]))
-            length_sorted_idx = np.argsort(lengths)
+        if isinstance(sentences, dict): 
+            # sentences(documents) already convered to token_ids with overlap
+            # sentences will be of the form:
+            #  {'input_ids': tensor([[..], [..]]), 
+            #   'attention_mask': tensor([[..], [..]]),
+            #   'context_masks': tensor([4,3])}
+            #
+            # element in input_ids -> list of tokens_id for a sentence
+            # element in attention_mask -> list of 0s,1s 0=actual token_id, 1=padded_token_id in input_ids
+            # element context_mask -> length of token_ids corresponding to the instruction 
+            embeddings = self.get_embeddings(sentences, output_value, normalize_embeddings, convert_to_numpy, device)
+            all_embeddings.extend(embeddings)
         else:
-            length_sorted_idx = np.argsort([-self._text_length(sen) for sen in sentences])
-        sentences_sorted = [sentences[idx] for idx in length_sorted_idx]
+            if isinstance(sentences[0],list):
+                lengths = []
+                for sen in sentences:
+                    lengths.append(-self._text_length(sen[1]))
+                length_sorted_idx = np.argsort(lengths)
+            else:
+                length_sorted_idx = np.argsort([-self._text_length(sen) for sen in sentences])
+            sentences_sorted = [sentences[idx] for idx in length_sorted_idx]
 
-        for start_index in trange(0, len(sentences), batch_size, desc="Batches", disable=not show_progress_bar):
-            sentences_batch = sentences_sorted[start_index:start_index+batch_size]
-            features = self.tokenize(sentences_batch)
-            features = batch_to_device(features, device)
-
-            with torch.no_grad():
-                out_features = self.forward(features)
-
-                if output_value == 'token_embeddings':
-                    embeddings = []
-                    for token_emb, attention in zip(out_features[output_value], out_features['attention_mask']):
-                        last_mask_id = len(attention)-1
-                        while last_mask_id > 0 and attention[last_mask_id].item() == 0:
-                            last_mask_id -= 1
-
-                        embeddings.append(token_emb[0:last_mask_id+1])
-                elif output_value is None:  #Return all outputs
-                    embeddings = []
-                    for sent_idx in range(len(out_features['sentence_embedding'])):
-                        row =  {name: out_features[name][sent_idx] for name in out_features}
-                        embeddings.append(row)
-                else:   #Sentence embeddings
-                    embeddings = out_features[output_value]
-                    embeddings = embeddings.detach()
-                    if normalize_embeddings:
-                        embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
-
-                    # fixes for #522 and #487 to avoid oom problems on gpu with large datasets
-                    if convert_to_numpy:
-                        embeddings = embeddings.cpu()
-
+            for start_index in trange(0, len(sentences), batch_size, desc="Batches", disable=not show_progress_bar):
+                sentences_batch = sentences_sorted[start_index:start_index+batch_size]
+                features = self.tokenize(sentences_batch)
+                embeddings = self.get_embeddings(features, output_value, normalize_embeddings, convert_to_numpy, device)
                 all_embeddings.extend(embeddings)
 
-        all_embeddings = [all_embeddings[idx] for idx in np.argsort(length_sorted_idx)]
+            all_embeddings = [all_embeddings[idx] for idx in np.argsort(length_sorted_idx)]
 
         if convert_to_tensor:
             all_embeddings = torch.stack(all_embeddings)

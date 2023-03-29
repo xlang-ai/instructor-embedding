@@ -1,5 +1,5 @@
 transformers==4.20.0
-datasets>=2.2.0
+datasets==2.4.0
 jsonlines
 numpy
 requests>=2.26.0
