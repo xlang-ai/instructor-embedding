@@ -225,3 +225,8 @@ If you find our work helpful, please cite us:
   year={2022},
 }
 ```
+
+## INSTRUCTOR Elsewhere
+We thank the community's efforts for extending SimCSE!
+* [MosaicML](https://www.mosaicml.com/inference) has included [Instructor-Large](https://huggingface.co/hkunlp/instructor-large) and [Instructor-XL](https://huggingface.co/hkunlp/instructor-xl)
+* [embaas](https://embaas.io/docs/models/instructor) integrated [Instructor-Large](https://huggingface.co/hkunlp/instructor-large)
