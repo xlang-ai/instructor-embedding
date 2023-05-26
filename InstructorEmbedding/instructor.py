@@ -464,10 +464,10 @@ class INSTRUCTOR(SentenceTransformer):
 
         modules = OrderedDict()
         for module_config in modules_config:
-            if module_config['type']=="sentence_transformers.models.Transformer":
+            if module_config['idx']==0:
                 print('load INSTRUCTOR_Transformer')
                 module_class = INSTRUCTOR_Transformer
-            elif module_config['type']=="sentence_transformers.models.Pooling":
+            elif module_config['idx']==1:
                 module_class = INSTRUCTOR_Pooling
             else:
                 module_class = import_from_string(module_config['type'])
