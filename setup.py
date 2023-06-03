@@ -6,8 +6,8 @@ with open("README.md", mode="r", encoding="utf-8") as readme_file:
 setup(
     name='InstructorEmbedding',
     packages=['InstructorEmbedding'],
-    version='1.0.0',
-    license='MIT',
+    version='1.0.1',
+    license='Apache License 2.0',
     description='Text embedding tool',
     long_description=readme,
     long_description_content_type="text/markdown",
