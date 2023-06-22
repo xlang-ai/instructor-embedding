@@ -14,6 +14,7 @@ We introduce **Instructor**👨‍🏫, an instruction-finetuned text embedding 
 
   - [Installation](#Installation)
   - [Getting Started](#getting-started)
+    - [The `encode` function](#the-encode-function)
   - [Model List](#model-list)
   - [Use Cases](#use-cases)
     - [Calculate embeddings for your customized texts](#calculate-embeddings-for-your-customized-texts)
