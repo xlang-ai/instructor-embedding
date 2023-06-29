@@ -224,6 +224,7 @@ To [**Quantize**](https://pytorch.org/docs/stable/quantization.html) the Instruc
 
 ```python 
 # imports 
+import torch
 from InstructorEmbedding import INSTRUCTOR
 
 # load the model 
