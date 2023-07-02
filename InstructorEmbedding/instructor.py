@@ -243,7 +243,6 @@ class INSTRUCTOR_Transformer(Transformer):
 
         #No max_seq_length set. Try to infer from model
         # print('max_seq_length ', max_seq_length)
-        max_seq_length = 512
         if max_seq_length is None:
             if hasattr(self.auto_model, "config") and hasattr(self.auto_model.config, "max_position_embeddings") and hasattr(self.tokenizer, "model_max_length"):
                 max_seq_length = min(self.auto_model.config.max_position_embeddings, self.tokenizer.model_max_length)
