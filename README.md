@@ -12,22 +12,29 @@ We introduce **Instructor**👨‍🏫, an instruction-finetuned text embedding 
 
 ## Quick Links
 
-  - [Installation](#Installation)
+- [One Embedder, Any Task: Instruction-Finetuned Text Embeddings](#one-embedder-any-task-instruction-finetuned-text-embeddings)
+  - [Quick Links](#quick-links)
+  - [Installation](#installation)
+    - [Environment setup](#environment-setup)
   - [Getting Started](#getting-started)
     - [The `encode` function](#the-encode-function)
   - [Model List](#model-list)
   - [Use Cases](#use-cases)
     - [Calculate embeddings for your customized texts](#calculate-embeddings-for-your-customized-texts)
     - [Compute similarities between texts](#compute-similarities-between-texts)
-    - [Information retrieval](#use-customized-embeddings-for-information-retrieval)
-    - [Clustering](#use-customized-embeddings-for-clustering)
+    - [Use customized embeddings for information retrieval](#use-customized-embeddings-for-information-retrieval)
+    - [Use customized embeddings for clustering](#use-customized-embeddings-for-clustering)
   - [Training](#training)
+    - [Data](#data)
+    - [Train INSTRUCTOR](#train-instructor)
   - [Evaluation](#evaluation)
     - [MTEB](#mteb)
     - [Billboard](#billboard)
     - [Prompt Retrieval](#prompt-retrieval)
+  - [Quantization](#quantization)
   - [Bugs or questions?](#bugs-or-questions)
   - [Citation](#citation)
+  - [INSTRUCTOR Elsewhere](#instructor-elsewhere)
 
 ## Installation
 It is very easy to use INSTRUCTOR for any text embeddings. You can easily try it out in [Colab notebook](https://colab.research.google.com/drive/1P7ivNLMosHyG7XOHmoh7CoqpXryKy3Qt?usp=sharing). In your local machine, we recommend to first create a virtual environment:
@@ -235,6 +242,35 @@ cd evaluation/prompt_retrieval
 python main.py --embedding_model hkunlp/instructor-large --task rte --model_cache_dir {cache_dir} --output_dir {output_dir} --add_prompt
 ```
 You can evaluate your trained model checkpoints by specifying `--model_name` and run prompt retrieval datasets by changing `--task`. In order to have a consistent metric, we cast all tasks in Prompt Retrieval into a "text-to-text" format, and report the Rouge-L score.
+
+
+## Quantization 
+To [**Quantize**](https://pytorch.org/docs/stable/quantization.html) the Instructor embedding model, run the following code: 
+
+```python 
+# imports 
+import torch
+from InstructorEmbedding import INSTRUCTOR
+
+# load the model 
+model = INSTRUCTOR('hkunlp/instructor-large', device='cpu')  # you can use GPU
+
+# quantize the model 
+qmodel = torch.quantization.quantize_dynamic(
+model, {torch.nn.Linear}, dtype=torch.qint8)
+
+# Inference 
+sentence = "3D ActionSLAM: wearable person tracking in multi-floor environments"
+instruction = "Represent the Science title:"
+
+embeddings = qmodel.encode([[instruction,sentence]])  
+# you can also normalize the embeddings:  normalize_embeddings=True 
+
+print(f"Quantized Embeddings:\n {embeddings})
+````
+
+It reduces the model size by 10x and inference time will be lesser than normal model :) 
+
 
 ## Bugs or questions?
 If you have any question related to the code or the paper, feel free to email Hongjin (`hjsu@cs.hku.hk`) and Weijia (`swj0419@cs.washington.edu`). Please try to specify the problem with details so we can help you better and quicker.
