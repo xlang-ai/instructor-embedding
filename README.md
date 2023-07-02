@@ -14,6 +14,7 @@ We introduce **Instructor**👨‍🏫, an instruction-finetuned text embedding 
 
   - [Installation](#Installation)
   - [Getting Started](#getting-started)
+    - [The `encode` function](#the-encode-function)
   - [Model List](#model-list)
   - [Use Cases](#use-cases)
     - [Calculate embeddings for your customized texts](#calculate-embeddings-for-your-customized-texts)
@@ -86,6 +87,30 @@ for pair, embedding in zip(text_instruction_pairs, customized_embeddings):
     print("Embedding: ", embedding)
     print("")
 ```
+
+### The `encode` function
+
+The users of the model need to use only the `encode` function:
+
+```python
+model.encode( sentences,
+              batch_size: int = 32,
+              show_progress_bar: bool = None,
+              output_value: str = 'sentence_embedding',
+              convert_to_numpy: bool = True,
+              convert_to_tensor: bool = False,
+              device: str = None,
+              normalize_embeddings: bool = False)
+```
+
+* `sentences`: The sentences to be embedded. It should be in the format of `[["instruction prompt 0", "text to be embedded 0], ["instruction prompt 1", "text to be embedded 1], ...]`.
+* `batch_size` (default: 32): The batch size used for the computation. It determines the number of sentences processed together in each batch.
+* `show_progress_bar` (default: None): If set to `True`, it displays a progress bar while encoding sentences, providing a visual indication of the encoding progress.
+* `output_value` (default: 'sentence\_embedding'): Specifies the desired output type. The default value 'sentence\_embedding' returns sentence embeddings. Setting it to 'token\_embeddings' returns wordpiece token embeddings. Setting it to None returns all output values.
+* `convert_to_numpy` (default: `True`): If set to `True`, the output is a list of numpy vectors. If set to `False`, the output is a list of PyTorch tensors.
+* `convert_to_tensor` (default: `False`): If set to `True`, the function returns a stacked tensor as a single output. This parameter overrides any setting specified by `convert_to_numpy`.
+* `device` (default: None): Specifies the torch.device to use for the computation. If not specified, the function uses the default device.
+* `normalize_embeddings` (default: `False`): If set to `True`, the returned vectors will have a length of 1, indicating that they are normalized. In this case, similarity search would use the faster dot-product (`util.dot_score`), instead of cosine similarity.
 
 ## Model List
 
