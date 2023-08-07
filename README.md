@@ -266,7 +266,7 @@ instruction = "Represent the Science title:"
 embeddings = qmodel.encode([[instruction,sentence]])  
 # you can also normalize the embeddings:  normalize_embeddings=True 
 
-print(f"Quantized Embeddings:\n {embeddings})
+print(f"Quantized Embeddings:\n {embeddings}")
 ````
 
 It reduces the model size by 10x and inference time will be lesser than normal model :) 
