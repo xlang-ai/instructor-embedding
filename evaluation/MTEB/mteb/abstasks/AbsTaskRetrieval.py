@@ -7,7 +7,7 @@ import torch.multiprocessing as mp
 
 from .AbsTask import AbsTask
 from transformers import AutoTokenizer
-
+from sentence_transformers import SentenceTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -571,19 +571,6 @@ DEFINITIONS = {
 }
 
 
-def sentence_transformer_encode_multi_process_worker(target_device: str, model, input_queue, results_queue):
-    """
-    Internal working process to encode sentences in multi-process setup
-    """
-    while True:
-        try:
-            id, batch_size, sentences = input_queue.get()
-            embeddings = model.encode(sentences, device=target_device, show_progress_bar=False, convert_to_numpy=True,
-                                      batch_size=batch_size)
-            results_queue.put([id, embeddings])
-        except queue.Empty:
-            break
-
 class AbsTaskRetrieval(AbsTask):
     """
     Abstract class for re-ranking experiments.
@@ -698,7 +685,7 @@ class DRESModel:
 
         for process_id, device_name in enumerate(target_devices):
             p = ctx.Process(
-                target=sentence_transformer_encode_multi_process_worker,
+                target=SentenceTransformer._encode_multi_process_worker,
                 args=(process_id, device_name, self.model, input_queue, output_queue),
                 daemon=True,
             )
@@ -753,8 +740,10 @@ class DRESModel:
     def encode_corpus_parallel(
         self, corpus: List[Dict[str, str]], pool: Dict[str, object], batch_size: int, chunk_id: int, **kwargs
     ):
+        instruction = DEFINITIONS[self.args.prompt][self.args.task_name]['corpus']
         if type(corpus) is dict:
             sentences = [
+                [instruction, (corpus["title"][i] + self.sep + corpus["text"][i]).strip()]
                 (corpus["title"][i] + self.sep + corpus["text"][i]).strip()
                 if "title" in corpus
                 else corpus["text"][i].strip()
@@ -762,6 +751,7 @@ class DRESModel:
             ]
         else:
             sentences = [
+                [instruction, (doc["title"] + self.sep + doc["text"]).strip()]
                 (doc["title"] + self.sep + doc["text"]).strip() if "title" in doc else doc["text"].strip()
                 for doc in corpus
             ]

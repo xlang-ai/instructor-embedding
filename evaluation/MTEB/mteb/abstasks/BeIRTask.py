@@ -17,13 +17,10 @@ class BeIRTask(AbsTask):
         except ImportError:
             raise Exception("Retrieval tasks require beir package. Please install it with `pip install mteb[beir]`")
 
-        USE_BEIR_DEVELOPMENT = False
         try:
             if self.description["beir_name"].startswith("cqadupstack"):
                 raise ImportError("CQADupstack is incompatible with latest BEIR")
             from beir.datasets.data_loader_hf import HFDataLoader as BeirDataLoader
-
-            USE_BEIR_DEVELOPMENT = True
         except ImportError:
             from beir.datasets.data_loader import GenericDataLoader as BeirDataLoader
 
@@ -36,18 +33,11 @@ class BeIRTask(AbsTask):
 
         self.corpus, self.queries, self.relevant_docs = {}, {}, {}
         for split in eval_splits:
-            if USE_BEIR_DEVELOPMENT:
-                self.corpus[split], self.queries[split], self.relevant_docs[split] = BeirDataLoader(
-                    hf_repo=f"BeIR/{dataset}"
-                ).load(split=split)
-            else:
-                url = f"https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/{dataset}.zip"
-                # download_path = os.path.join(datasets.config.HF_DATASETS_CACHE, "BeIR")
-                download_path = os.path.join('/home2/huggingface/datasets', "BeIR")
-                # download_path = os.path.join('/gscratch/zlab/swj0419', "BeIR")
-                data_path = util.download_and_unzip(url, download_path)
-                data_path = f"{data_path}/{sub_dataset}" if sub_dataset else data_path
-                self.corpus[split], self.queries[split], self.relevant_docs[split] = BeirDataLoader(
-                    data_folder=data_path
-                ).load(split=split)
+            url = f"https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/{dataset}.zip"
+            download_path = os.path.join(datasets.config.HF_DATASETS_CACHE, "BeIR")
+            data_path = util.download_and_unzip(url, download_path)
+            data_path = f"{data_path}/{sub_dataset}" if sub_dataset else data_path
+            self.corpus[split], self.queries[split], self.relevant_docs[split] = BeirDataLoader(
+                data_folder=data_path
+            ).load(split=split)
         self.data_loaded = True
