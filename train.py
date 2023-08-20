@@ -147,7 +147,9 @@ class InstructorTrainer(Seq2SeqTrainer):
         labels_another = torch.zeros(all_another_scores.size(0)).long().to(embeddings_query.device)
         loss += nn.CrossEntropyLoss()(all_another_scores, labels_another)
 
-        return loss
+        if return_outputs:
+            return loss, all_scores
+        return loss 
 
 @dataclass
 class ModelArguments:
@@ -433,60 +435,73 @@ def main():
     set_seed(training_args.seed)
     with open(os.path.join(model_args.cache_dir, 'medi-data.json')) as f:
         train_examples_raw = json.load(f)
+
     if data_args.debug_mode:
         train_examples_raw = train_examples_raw[:data_args.debug_mode]
     old_train_examples_raw = train_examples_raw
-    train_examples_raw = []
-    total_n = len(old_train_examples_raw)
+    total_train_n = len(old_train_examples_raw)
+
     real_batch_size = max(training_args.per_device_train_batch_size,
                           training_args.per_device_train_batch_size * torch.cuda.device_count())
     # print('real_batch_size: ', real_batch_size,training_args.per_device_train_batch_size,torch.cuda.device_count())
-    for idx in range(0, total_n, real_batch_size):
-        local_task_name = old_train_examples_raw[idx]['task_name']
-        cur_batch = []
-        include_batch = True
-        for idx1 in range(idx, min(idx + real_batch_size, total_n)):
-            if not old_train_examples_raw[idx1]['task_name'] == local_task_name:
-                print(f'one batch in task {old_train_examples_raw[idx1]["task_name"]} is skipped')
-                include_batch = False
-                break
-            else:
-                cur_batch.append(old_train_examples_raw[idx1])
-        if include_batch and len(cur_batch) == real_batch_size:
-            train_examples_raw.append(cur_batch)
+    def get_examples_raw(old_examples_raw, total_n, real_batch_size):
+        examples_raw = []
+        for idx in range(0, total_n, real_batch_size):
+            local_task_name = old_examples_raw[idx]['task_name']
+            cur_batch = []
+            include_batch = True
+            for idx1 in range(idx, min(idx + real_batch_size, total_n)):
+                if not old_examples_raw[idx1]['task_name'] == local_task_name:
+                    print(f'one batch in task {old_examples_raw[idx1]["task_name"]} is skipped')
+                    include_batch = False
+                    break
+                else:
+                    cur_batch.append(old_examples_raw[idx1])
+            if include_batch and len(cur_batch) == real_batch_size:
+                examples_raw.append(cur_batch)
+        return examples_raw
+
+    train_examples_raw = get_examples_raw(old_train_examples_raw, total_train_n, real_batch_size)
     random.shuffle(train_examples_raw)
+    
     if data_args.max_examples is not None and len(train_examples_raw*real_batch_size)>data_args.max_examples:
         train_examples_raw = train_examples_raw[:int(data_args.max_examples/real_batch_size)]
+
     train_examples_raw_batch = train_examples_raw
     train_examples_raw = []
+
     for b in train_examples_raw_batch:
         train_examples_raw += b
-    print(f'There are {len(train_examples_raw)} pairs to train in total')
+    print(f'There are {len(train_examples_raw)} pairs to train in total.')
+
     if data_args.debug_mode:
         train_examples_raw = train_examples_raw[:int(data_args.debug_mode)]
 
-    train_examples = {'query':[],'pos':[],'neg':[],'task_name':[]}
-    task_name_map = {}
-    total_train_num = len(train_examples_raw)
-    task_count = 0
-    for i in range(total_train_num):
-        cur_e = train_examples_raw[i]
-        for k in ['query','pos','neg']:
-            for s in cur_e[k][:-1]:
-                assert not '!@#$%^&**!@#$%^&**' in s
-            cur_e[k][-1] = str(cur_e[k][-1])
-            if not data_args.add_prompt_to_document:
-                cur_e[k][0] = ''
-            assert cur_e[k][0].startswith('Represent ') or cur_e[k][0]==''
-            train_examples[k].append('!@#$%^&**!@#$%^&**'.join(cur_e[k]))
-        if not cur_e['task_name'] in task_name_map:
-            task_name_map[cur_e['task_name']] = task_count
-            task_count += 1
-        train_examples['task_name'].append(task_name_map[cur_e['task_name']])
-    raw_datasets = DatasetDict({'train':Dataset.from_dict(train_examples)})
+    def get_dataset(examples_raw):
+        examples = {'query':[],'pos':[],'neg':[],'task_name':[]}
+        task_name_map = {}
+        total_num = len(examples_raw)
+        task_count = 0
+        for i in range(total_num):
+            cur_e = examples_raw[i]
+            for k in ['query','pos','neg']:
+                for s in cur_e[k][:-1]:
+                    assert not '!@#$%^&**!@#$%^&**' in s
+                cur_e[k][-1] = str(cur_e[k][-1])
+                if not data_args.add_prompt_to_document:
+                    cur_e[k][0] = ''
+                assert cur_e[k][0].startswith('Represent ') or cur_e[k][0]==''
+                examples[k].append('!@#$%^&**!@#$%^&**'.join(cur_e[k]))
+            if not cur_e['task_name'] in task_name_map:
+                task_name_map[cur_e['task_name']] = task_count
+                task_count += 1
+            examples['task_name'].append(task_name_map[cur_e['task_name']])
+        return examples
+
+    train_raw_datasets = DatasetDict({'train':Dataset.from_dict(get_dataset(train_examples_raw))})
 
     model = INSTRUCTOR(real_name_or_path, cache_folder=model_args.cache_dir)
-    column_names = raw_datasets["train"].column_names
+    column_names = train_raw_datasets["train"].column_names
 
     def preprocess_function(examples):
         all_tokenized = None
@@ -518,7 +533,36 @@ def main():
         all_tokenized['task_name'] = examples['task_name']
         return all_tokenized
 
-    train_dataset = raw_datasets["train"]
+    train_dataset = train_raw_datasets["train"]
+    val_dataset = None
+    if data_args.validation_file:
+        with open(data_args.validation_file) as f:
+            val_examples_raw = json.load(f)
+
+        old_val_examples_raw = val_examples_raw
+        total_val_n = len(old_val_examples_raw)
+
+        val_examples_raw = get_examples_raw(old_val_examples_raw, total_val_n, real_batch_size)
+        random.shuffle(val_examples_raw)
+
+        val_examples_raw_batch = val_examples_raw
+        val_examples_raw = []
+        for b in val_examples_raw_batch:
+            val_examples_raw += b
+        print(f'There are {len(val_examples_raw)} pairs in val dataset.')
+        val_raw_datasets = DatasetDict({'val':Dataset.from_dict(get_dataset(val_examples_raw))})
+        val_dataset = val_raw_datasets["val"]
+
+        with training_args.main_process_first(desc="validation dataset map pre-processing"):
+            val_dataset = val_dataset.map( 
+                preprocess_function,
+                batched=True,
+                num_proc=data_args.preprocessing_num_workers,
+                remove_columns=column_names,
+                load_from_cache_file=not data_args.overwrite_cache,
+                desc="Running tokenizer on val dataset",
+            )
+
     if data_args.max_train_samples is not None:
         max_train_samples = min(len(train_dataset), data_args.max_train_samples)
         train_dataset = train_dataset.select(range(max_train_samples))
@@ -544,7 +588,7 @@ def main():
         model=model,
         args=training_args,
         train_dataset=train_dataset,
-        eval_dataset=None,
+        eval_dataset=val_dataset,
         tokenizer=tokenizer,
         data_collator=data_collator,
         compute_metrics=None,
