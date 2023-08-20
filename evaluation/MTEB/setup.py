@@ -38,8 +38,8 @@ To create the package for pypi.
 
 
 from setuptools import find_packages, setup
-print(find_packages())
-exit(0)
+# print(find_packages())
+# exit(0)
 
 
 with open("README.md", mode="r", encoding="utf-8") as readme_file:
@@ -74,6 +74,7 @@ setup(
     python_requires=">=3.7.0",
     install_requires=[
         "datasets>=2.2.0",
+        "pyarrow==8.0.0",
         "jsonlines",
         "numpy",
         "requests>=2.26.0",
