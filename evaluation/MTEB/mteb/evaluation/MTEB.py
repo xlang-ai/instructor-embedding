@@ -237,7 +237,7 @@ class MTEB:
                 }
                 for split in task_eval_splits:
                     tick = time()
-                    results = task.evaluate(model, split, **kwargs)
+                    results = task.evaluate(model, split, batch_size=my_args.batch_size, **kwargs)
                     tock = time()
                     logger.info(f"Evaluation for {task.description['name']} on {split} took {tock - tick:.2f} seconds")
                     results["evaluation_time"] = round(tock - tick, 2)

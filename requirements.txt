@@ -1,5 +1,6 @@
 transformers==4.20.0
 datasets>=2.2.0
+pyarrow==8.0.0
 jsonlines
 numpy
 requests>=2.26.0
