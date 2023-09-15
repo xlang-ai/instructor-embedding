@@ -198,7 +198,7 @@ The MEDI data is available to be downloaded at [this link](https://drive.google.
 ### Train INSTRUCTOR
 We provide the example script for training INSTRUCTOR. You may need to first download the [MEDI data](https://drive.google.com/file/d/1vZ5c2oJNonGOvXzppNg5mHz24O6jcc52/view?usp=sharing), unzip the folder and put `medi-data.json` under `--cache_dir`.
 ```python
-python train.py --model_name_or_path sentence-transformers/gtr-t5-large --output_dir {output_directory} --cache_dir {cache_directory} --max_source_length 512 --num_train_epochs 10 --save_steps 500 --cl_temperature 0.01 --warmup_ratio 0.1 --learning_rate 2e-5 --overwrite_output_dir
+python train.py --model_name_or_path sentence-transformers/gtr-t5-large --output_dir {output_directory} --cache_dir {cache_directory} --max_source_length 512 --num_train_epochs 10 --save_steps 500 --cl_temperature 0.1 --warmup_ratio 0.1 --learning_rate 2e-5 --overwrite_output_dir
 ```
 We explain the arguments in the following:
 * `--model_name_or_path`: Pretrained checkpoints to start with. We support both model id (e.g., `sentence-transformers/gtr-t5-large`, `sentence-transformers/sentence-t5-large`) or checkpoint path (e.g., checkpoint saved by transformers trainer).
