@@ -13,7 +13,7 @@ import nltk  # Here to have a nice missing dependency error message early on
 
 import transformers
 from filelock import FileLock
-from InstructorEmbedding import INSTRUCTOR
+from InstructorEmbedding import INSTRUCTOR, INSTRUCTOR_Transformer
 from transformers import (
     AutoTokenizer,
     DataCollatorForSeq2Seq,
@@ -27,6 +27,9 @@ from transformers import (
     set_seed,
 )
 from transformers.trainer_utils import get_last_checkpoint
+from transformers.trainer_callback import TrainerCallback, TrainerState, TrainerControl
+from transformers.training_args import TrainingArguments
+
 from transformers.utils import check_min_version, is_offline_mode
 from torch.utils.data import Dataset, SequentialSampler
 from torch.utils.data.distributed import DistributedSampler
@@ -61,6 +64,87 @@ def has_length(dataset):
     except TypeError:
         # TypeError: len() of unsized object
         return False
+
+class InstructorCallBack(TrainerCallback):
+
+    def on_init_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        """
+        Event called at the end of the initialization of the [`Trainer`].
+        """
+        pass
+
+    def on_train_begin(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        """
+        Event called at the beginning of training.
+        """
+        for p in kwargs["model"][0].parameters(): 
+            p.requires_grad = False
+        pass
+
+    def on_train_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        """
+        Event called at the end of training.
+        """
+        pass
+
+    def on_epoch_begin(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        """
+        Event called at the beginning of an epoch.
+        """
+        pass
+
+    def on_epoch_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        """
+        Event called at the end of an epoch.
+        """
+        pass
+
+    def on_step_begin(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        """
+        Event called at the beginning of a training step. If using gradient accumulation, one training step might take
+        several inputs.
+        """
+        if state.epoch == args.pool_dense_freeze_steps:
+            for p in kwargs["model"][0].parameters(): 
+                p.requires_grad = True
+        pass
+
+    def on_substep_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        """
+        Event called at the end of an substep during gradient accumulation.
+        """
+        pass
+
+    def on_step_end(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        """
+        Event called at the end of a training step. If using gradient accumulation, one training step might take
+        several inputs.
+        """
+        pass
+
+    def on_evaluate(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        """
+        Event called after an evaluation phase.
+        """
+        pass
+
+    def on_save(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        """
+        Event called after a checkpoint save.
+        """
+        pass
+
+    def on_log(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        """
+        Event called after logging the last logs.
+        """
+        pass
+
+    def on_prediction_step(self, args: TrainingArguments, state: TrainerState, control: TrainerControl, **kwargs):
+        """
+        Event called after a prediction step.
+        """
+        pass
 
 class InstructorTrainer(Seq2SeqTrainer):
     def _get_train_sampler(self) :
@@ -100,7 +184,7 @@ class InstructorTrainer(Seq2SeqTrainer):
             cur_inputs = {
                 'input_ids': inputs[f'{k}_input_ids'],
                 'attention_mask': inputs[f'{k}_attention_mask'],
-                'context_masks': inputs[f'{k}_context_masks'],
+                'instruction_mask': inputs[f'{k}_instruction_mask'],
             }
             cur_results[k] = model(cur_inputs)['sentence_embedding']
         embeddings_query = cur_results['query']
@@ -156,7 +240,6 @@ class ModelArguments:
     """
     Arguments pertaining to which model/config/tokenizer we are going to fine-tune from.
     """
-
     model_name_or_path: str = field(
         metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
     )
@@ -379,9 +462,20 @@ summarization_name_mapping = {
     "wiki_summary": ("article", "highlights"),
 }
 
+@dataclass
+class InstructorTrainingArguments(Seq2SeqTrainingArguments):
+    pool_dense_freeze_steps: Optional[int] = field(
+            default=5000,
+            metadata={"help": "Epoch till which pooling and dense layes should be frozen"},
+        )
 
 def main():
-    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, Seq2SeqTrainingArguments))
+    # import debugpy
+    # debugpy.listen(5678)
+    # print("Waiting for debugger...")
+    # debugpy.wait_for_client()
+    # print("Debugger Attached.")
+    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, InstructorTrainingArguments))
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
     else:
@@ -424,16 +518,11 @@ def main():
             )
 
     # Set seed before initializing model.
-    tokenizer = AutoTokenizer.from_pretrained(
-        model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
-        cache_dir=model_args.cache_dir,
-        use_fast=model_args.use_fast_tokenizer,
-        revision=model_args.model_revision,
-        use_auth_token=True if model_args.use_auth_token else None,
-    )
+    instructor_tokenizer = INSTRUCTOR_Transformer(model_name_or_path=model_args.model_name_or_path, load_model=False)
+    tokenizer = instructor_tokenizer.tokenizer #pre-trained tokentizer
 
     set_seed(training_args.seed)
-    with open(os.path.join(model_args.cache_dir, 'medi-data.json')) as f:
+    with open(os.path.join(model_args.cache_dir, 'medi-data-train.json')) as f:
         train_examples_raw = json.load(f)
 
     if data_args.debug_mode:
@@ -443,7 +532,7 @@ def main():
 
     real_batch_size = max(training_args.per_device_train_batch_size,
                           training_args.per_device_train_batch_size * torch.cuda.device_count())
-    # print('real_batch_size: ', real_batch_size,training_args.per_device_train_batch_size,torch.cuda.device_count())
+
     def get_examples_raw(old_examples_raw, total_n, real_batch_size):
         examples_raw = []
         for idx in range(0, total_n, real_batch_size):
@@ -485,8 +574,6 @@ def main():
         for i in range(total_num):
             cur_e = examples_raw[i]
             for k in ['query','pos','neg']:
-                for s in cur_e[k][:-1]:
-                    assert not '!@#$%^&**!@#$%^&**' in s
                 cur_e[k][-1] = str(cur_e[k][-1])
                 if not data_args.add_prompt_to_document:
                     cur_e[k][0] = ''
@@ -506,26 +593,10 @@ def main():
     def preprocess_function(examples):
         all_tokenized = None
         for key in ['query','pos','neg']:
-            num = len(examples[key])
-            contexts = []
-            concatenated_input_texts = []
-            for local_idx in range(num):
-                splits = examples[key][local_idx].split('!@#$%^&**!@#$%^&**')
-                assert len(splits) == 2
-                contexts.append(splits[0])
-                concatenated_input_texts.append(''.join(splits))
-                assert isinstance(contexts[-1], str)
-                assert isinstance(concatenated_input_texts[-1], str)
-            tokenized = tokenizer(concatenated_input_texts,padding='max_length', truncation='longest_first', return_tensors="pt", max_length=data_args.max_source_length)
-            context_tok = tokenizer(contexts,padding='max_length', truncation='longest_first', return_tensors="pt", max_length=data_args.max_source_length)
-            tokenized['context_masks'] = torch.sum(context_tok['attention_mask'], dim=1)
-            tokenized['context_masks'] = tokenized['context_masks'] - 1
-            for my_idx in range(len(tokenized['context_masks'])):
-                if tokenized['context_masks'][my_idx] <= 1:
-                    tokenized['context_masks'][my_idx] = 0
-            keys = tokenized.keys()
+            input_features = instructor_tokenizer.tokenize(examples[key])
+            keys = input_features.keys()
             if all_tokenized is None:
-                all_tokenized = tokenized.copy()
+                all_tokenized = input_features.copy()
                 for k in keys:
                     all_tokenized[k] = all_tokenized[k].tolist()
             for k in keys:
@@ -583,7 +654,7 @@ def main():
         label_pad_token_id=label_pad_token_id,
         pad_to_multiple_of=8 if training_args.fp16 else None,
     )
-
+    callback = InstructorCallBack()
     trainer = InstructorTrainer(
         model=model,
         args=training_args,
@@ -592,6 +663,7 @@ def main():
         tokenizer=tokenizer,
         data_collator=data_collator,
         compute_metrics=None,
+        callbacks=[callback]
     )
 
     checkpoint = None

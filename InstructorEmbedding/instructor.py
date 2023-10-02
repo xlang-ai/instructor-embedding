@@ -7,11 +7,13 @@ import numpy as np
 from tqdm.autonotebook import trange
 from torch import Tensor, device
 from sentence_transformers import SentenceTransformer
-from sentence_transformers.models import Transformer
+from sentence_transformers.models import Transformer, Dense
 from transformers import AutoConfig
 from transformers import AutoTokenizer
 from collections import OrderedDict
 from torch import nn
+from torch import functional as F
+from typing import Union, Tuple, List, Iterable, Dict
 
 def batch_to_device(batch, target_device: device):
     for key in batch:
@@ -19,6 +21,21 @@ def batch_to_device(batch, target_device: device):
             batch[key] = batch[key].to(target_device)
     return batch
 
+class INSTRUCTOR_Dense(Dense):
+    def __init__(self, in_features: int, out_features: int, bias: bool = True, activation_function=nn.Tanh(), init_weight: Tensor = None, init_bias: Tensor = None):
+        super(INSTRUCTOR_Dense, self).__init__(in_features=in_features,
+        out_features=out_features, bias=bias, activation_function=activation_function, init_weight=init_weight, init_bias=init_bias)
+
+    @staticmethod
+    def load(input_path):
+        with open(os.path.join(input_path, 'config_gru.json')) as fIn:
+            config = json.load(fIn)
+
+        config['activation_function'] = import_from_string(config['activation_function'])()
+        model = INSTRUCTOR_Dense(**config)
+        if os.path.exists(os.path.join(input_path, 'pytorch_model.bin')):
+            model.load_state_dict(torch.load(os.path.join(input_path, 'pytorch_model.bin'), map_location=torch.device('cpu')))
+        return model
 
 class INSTRUCTOR_Pooling(nn.Module):
     """Performs pooling (max or mean) on the token embeddings.
@@ -45,22 +62,29 @@ class INSTRUCTOR_Pooling(nn.Module):
                  pooling_mode_mean_sqrt_len_tokens: bool = False,
                  pooling_mode_weightedmean_tokens: bool = False,
                  pooling_mode_lasttoken: bool = False,
+                 pooling_mode_gru: bool = False,
+                 config_path: str = None
                  ):
         super(INSTRUCTOR_Pooling, self).__init__()
 
-        self.config_keys = ['word_embedding_dimension', 'pooling_mode_cls_token', 'pooling_mode_mean_tokens',
+        self.config_keys = ['word_embedding_dimension', 
+                            'pooling_mode_cls_token',
+                            'pooling_mode_mean_tokens',
                             'pooling_mode_max_tokens',
                             'pooling_mode_mean_sqrt_len_tokens', 'pooling_mode_weightedmean_tokens',
-                            'pooling_mode_lasttoken']
+                            'pooling_mode_lasttoken', 
+                            'pooling_mode_gru', 
+                            'gru_input_size']
 
         if pooling_mode is not None:  # Set pooling mode by string
             pooling_mode = pooling_mode.lower()
-            assert pooling_mode in ['mean', 'max', 'cls', 'weightedmean', 'lasttoken']
+            assert pooling_mode in set(['mean', 'max', 'cls', 'weightedmean', 'lasttoken', 'gru'])
             pooling_mode_cls_token = (pooling_mode == 'cls')
             pooling_mode_max_tokens = (pooling_mode == 'max')
             pooling_mode_mean_tokens = (pooling_mode == 'mean')
             pooling_mode_weightedmean_tokens = (pooling_mode == 'weightedmean')
             pooling_mode_lasttoken = (pooling_mode == 'lasttoken')
+            pooling_mode_gru = (pooling_mode == 'gru')
 
         self.word_embedding_dimension = word_embedding_dimension
         self.pooling_mode_cls_token = pooling_mode_cls_token
@@ -69,10 +93,27 @@ class INSTRUCTOR_Pooling(nn.Module):
         self.pooling_mode_mean_sqrt_len_tokens = pooling_mode_mean_sqrt_len_tokens
         self.pooling_mode_weightedmean_tokens = pooling_mode_weightedmean_tokens
         self.pooling_mode_lasttoken = pooling_mode_lasttoken
+        self.pooling_mode_gru = False
+        self.gru_input_size = None
+        if pooling_mode_gru:
+            self.pooling_mode_gru = True
+            gru_model_path = os.path.join(config_path, 'gru.bin')
+            parent_path = config_path.split("/")[:-1]
+            model_config_path = "/".join(parent_path)
+            with open(os.path.join(model_config_path, 'config.json')) as fIn:
+                model_config = json.load(fIn)
+                self.gru_input_size = model_config["d_model"]
 
-        pooling_mode_multiplier = sum([pooling_mode_cls_token, pooling_mode_max_tokens, pooling_mode_mean_tokens,
+            self.gru = nn.GRU(input_size=self.gru_input_size, hidden_size=self.gru_input_size, bias=True, batch_first=True, bidirectional=True)
+            if os.path.exists(gru_model_path):
+                self.gru.load_state_dict(torch.load(gru_model_path))
+
+        pooling_mode_multiplier = sum([pooling_mode_cls_token, 
+                                       pooling_mode_max_tokens, 
+                                       pooling_mode_mean_tokens,
                                        pooling_mode_mean_sqrt_len_tokens, pooling_mode_weightedmean_tokens,
-                                       pooling_mode_lasttoken])
+                                       pooling_mode_lasttoken,
+                                       pooling_mode_gru])
         self.pooling_output_dimension = (pooling_mode_multiplier * word_embedding_dimension)
 
     def __repr__(self):
@@ -95,6 +136,8 @@ class INSTRUCTOR_Pooling(nn.Module):
             modes.append('weightedmean')
         if self.pooling_mode_lasttoken:
             modes.append('lasttoken')
+        if self.pooling_mode_gru:
+            modes.append('gru')
 
         return "+".join(modes)
 
@@ -174,6 +217,14 @@ class INSTRUCTOR_Pooling(nn.Module):
             input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
             embedding = torch.gather(token_embeddings * input_mask_expanded, 1, gather_indices).squeeze(dim=1)
             output_vectors.append(embedding)
+        if self.pooling_mode_gru:
+            input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
+            # making the token embeddings corresponding to the instruction to zero
+            masked_token_embeddings = token_embeddings * input_mask_expanded
+            embedding, _ = self.gru(masked_token_embeddings)
+            # considering the outputs from forward direction and backward direction of the GRU
+            embedding_concat = torch.concatenate((embedding[:, -1, :self.gru_input_size], embedding[:, 0, self.gru_input_size:]), axis=1)
+            output_vectors.append(embedding_concat)
 
         output_vector = torch.cat(output_vectors, 1)
         features.update({'sentence_embedding': output_vector})
@@ -186,15 +237,16 @@ class INSTRUCTOR_Pooling(nn.Module):
         return {key: self.__dict__[key] for key in self.config_keys}
 
     def save(self, output_path):
-        with open(os.path.join(output_path, 'config.json'), 'w') as fOut:
+        with open(os.path.join(output_path, 'config_gru.json'), 'w') as fOut:
             json.dump(self.get_config_dict(), fOut, indent=2)
+        if self.pooling_mode_gru:
+            torch.save(self.gru.state_dict(), os.path.join(output_path, 'gru.bin'))
 
     @staticmethod
     def load(input_path):
-        with open(os.path.join(input_path, 'config.json')) as fIn:
+        with open(os.path.join(input_path, 'config_gru.json')) as fIn:
             config = json.load(fIn)
-
-        return INSTRUCTOR_Pooling(**config)
+        return INSTRUCTOR_Pooling(config_path=input_path, **config)
 
 def import_from_string(dotted_path):
     """
@@ -220,14 +272,18 @@ def import_from_string(dotted_path):
 
 class INSTRUCTOR_Transformer(Transformer):
 
-    def __init__(self, model_name_or_path: str, max_seq_length = None,
-                 model_args = {}, cache_dir = None,
-                 tokenizer_args = {}, do_lower_case: bool = False,
-                 tokenizer_name_or_path : str = None):
+    def __init__(self, 
+                model_name_or_path: str, 
+                max_seq_length = 512,
+                model_args = {}, 
+                cache_dir = None,
+                tokenizer_args = {}, 
+                do_lower_case: bool = False,
+                tokenizer_name_or_path : str = None,
+                load_model: bool = True):
         super(Transformer, self).__init__()
         self.config_keys = ['max_seq_length', 'do_lower_case']
         self.do_lower_case = do_lower_case
-
         self.model_name_or_path = model_name_or_path
         if model_name_or_path=='bi-contriever':
             model_name_or_path = "facebook/contriever"
@@ -237,56 +293,37 @@ class INSTRUCTOR_Transformer(Transformer):
             config = AutoConfig.from_pretrained(os.path.join(model_name_or_path,'with_prompt'), **model_args, cache_dir=cache_dir)
         else:
             config = AutoConfig.from_pretrained(model_name_or_path, **model_args, cache_dir=cache_dir)
-        self._load_model(self.model_name_or_path, config, cache_dir, **model_args)
 
+        if load_model:
+            self._load_model(self.model_name_or_path, config, cache_dir, **model_args)
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path if tokenizer_name_or_path is not None else model_name_or_path, cache_dir=cache_dir, **tokenizer_args)
 
-        #No max_seq_length set. Try to infer from model
-        # print('max_seq_length ', max_seq_length)
         if max_seq_length is None:
             if hasattr(self.auto_model, "config") and hasattr(self.auto_model.config, "max_position_embeddings") and hasattr(self.tokenizer, "model_max_length"):
                 max_seq_length = min(self.auto_model.config.max_position_embeddings, self.tokenizer.model_max_length)
 
         self.max_seq_length = max_seq_length
-
-        print('max_seq_length ',max_seq_length)
-
         if tokenizer_name_or_path is not None:
             self.auto_model.config.tokenizer_class = self.tokenizer.__class__.__name__
 
     def forward(self, features):
-        """Returns token_embeddings, cls_token"""
-        # print(features)
-        # exit(0)
-        trans_features = {'input_ids': features['input_ids'], 'attention_mask': features['attention_mask']}
+        input_features = {'input_ids': features['input_ids'], 'attention_mask': features['attention_mask']}
         if 'token_type_ids' in features:
-            trans_features['token_type_ids'] = features['token_type_ids']
+            input_features['token_type_ids'] = features['token_type_ids']
 
-        context_masks = None
-        if 'context_masks' in features:
-            context_masks = features['context_masks']
-        output_states = self.auto_model(**trans_features, return_dict=False)
+        output_states = self.auto_model(**input_features, return_dict=False)
         output_tokens = output_states[0]
         attention_mask = features['attention_mask']
-        if context_masks is not None:
-            import torch
-            assert len(context_masks) == len(attention_mask)
-            n = len(attention_mask)
-            # print('n ',n)
-            for local_idx in range(n):
-                assert torch.sum(attention_mask[local_idx]).item() >= context_masks[local_idx].item(),\
-                    f'{attention_mask[local_idx]}, {context_masks[local_idx]}, ' \
-                    f'{torch.sum(attention_mask[local_idx]).item()}, {context_masks[local_idx].item()}'
-                attention_mask[local_idx][:context_masks[local_idx]] = 0
-
-        # print('forward here')
+        instruction_mask = features['instruction_mask']
+        # masking the tokens corresponding to instruction so that 
+        # they are not considered during pooling.
+        attention_mask = attention_mask * instruction_mask
         features.update({'token_embeddings': output_tokens, 'attention_mask': attention_mask})
 
         if self.auto_model.config.output_hidden_states:
             all_layer_idx = 2
             if len(output_states) < 3: #Some models only output last_hidden_states and all_hidden_states
                 all_layer_idx = 1
-
             hidden_states = output_states[all_layer_idx]
             features.update({'all_layer_embeddings': hidden_states})
 
@@ -311,80 +348,77 @@ class INSTRUCTOR_Transformer(Transformer):
         output = {}
         if isinstance(texts[0], str):
             to_tokenize = [texts]
-
             to_tokenize = [[str(s).strip() for s in col] for col in to_tokenize]
 
             # Lowercase
             if self.do_lower_case:
                 to_tokenize = [[s.lower() for s in col] for col in to_tokenize]
 
-            tokenized = self.tokenizer(*to_tokenize, padding=True, truncation='longest_first', return_tensors="pt", max_length=self.max_seq_length)
+            input_features = self.tokenizer(*to_tokenize, padding="max_length", truncation='longest_first', return_tensors="pt", max_length=self.max_seq_length)
 
-        # elif isinstance(texts[0], dict):
-        #     to_tokenize = []
-        #     output['text_keys'] = []
-        #     for lookup in texts:
-        #         text_key, text = next(iter(lookup.items()))
-        #         to_tokenize.append(text)
-        #         output['text_keys'].append(text_key)
-        #     to_tokenize = [to_tokenize]
         elif isinstance(texts[0], list):
-            import torch
             assert isinstance(texts[0][1],str)
-            new_texts = []
-            for s in texts:
-                if self.do_lower_case:
-                    new_texts.append([s[0],s[1].strip().lower()])
-                else:
-                    new_texts.append([s[0], s[1].strip()])
-            texts = new_texts
             assert len(texts[0])==2,f'The input should have both instruction and input text'
-            # if len(texts[0])==3:
-                # print('component 3')
-            num = len(texts)
-            contexts = []
-            concatenated_input_texts = []
-            for local_idx in range(num):
-                assert len(texts[local_idx])==2
-                contexts.append(texts[local_idx][0])
-                concatenated_input_texts.append(''.join(texts[local_idx]))
-                assert isinstance(contexts[-1],str)
-                assert isinstance(concatenated_input_texts[-1],str)
-            tokenized = self.tokenize(concatenated_input_texts)
-            context_tok = self.tokenize(contexts)
-            tokenized['context_masks'] = torch.sum(context_tok['attention_mask'],dim=1)
-            tokenized['context_masks'] = tokenized['context_masks']-1
-            for my_idx in range(len(tokenized['context_masks'])):
-                if tokenized['context_masks'][my_idx]<=1:
-                    tokenized['context_masks'][my_idx] = 0
-            # text_types = [pair[-1] for pair in texts]
-            # print(text_types)
-            # assert all([tid==1 for tid in text_types]) or all([tid==0 for tid in text_types])
-            # tokenized['text_type'] = text_types[0]
-                # torch.set_printoptions(edgeitems=15)
-                # print(tokenized)
-                # exit(0)
-            # elif len(texts[0])==2:
-            #     # print('component 2')
-            #     input_texts = [pair[0] for pair in texts]
-            #     text_types = [pair[-1] for pair in texts]
-            #     assert all([tid == 1 for tid in text_types]) or all([tid == 0 for tid in text_types])
-            #     tokenized = self.tokenize(input_texts)
-            #     tokenized['text_type'] = text_types[0]
-            # else:
-            #     raise ValueError('tokenization error')
+
+            instructions = []
+            instruction_prepended_input_texts = []
+            for s in texts:
+                instruction = s[0].strip()
+                text = s[1].strip()
+                if self.do_lower_case:
+                    instruction = instruction.lower()
+                    text = text.lower()
+                instructions.append(instruction)
+                instruction_prepended_input_texts.append(''.join([instruction, text]))
+
+            input_features = self.tokenize(instruction_prepended_input_texts)
+            instruction_features = self.tokenize(instructions)
+            input_features = INSTRUCTOR.prepare_input_features(input_features, instruction_features)
         else:
             raise ValueError('not support other modes')
-            # batch1, batch2 = [], []
-            # for text_tuple in texts:
-            #     batch1.append(text_tuple[0])
-            #     batch2.append(text_tuple[1])
-            # to_tokenize = [batch1, batch2]
 
-        output.update(tokenized)
+        output.update(input_features)
         return output
 
 class INSTRUCTOR(SentenceTransformer):
+
+    @staticmethod
+    def prepare_input_features(input_features, instruction_features, return_data_type: str = "pt"):
+        if return_data_type == "np":
+            input_features["attention_mask"] = torch.from_numpy(input_features["attention_mask"])
+            instruction_features["attention_mask"] = torch.from_numpy(instruction_features["attention_mask"])
+
+        input_attention_mask_shape = input_features['attention_mask'].shape
+        instruction_attention_mask = instruction_features['attention_mask']
+
+        # reducing the attention length by 1 in order to omit the attention corresponding to the end_token
+        instruction_attention_mask = instruction_attention_mask[:, 1:]
+        # increasing the attention length by padding with a column of 0 in order to compensate of the above length reduction
+        instruction_attention_mask = torch.cat((instruction_attention_mask, torch.zeros(instruction_attention_mask.size(0), 1)), dim=1)
+
+        # creating instruction attention matrix equivalent to the size of the input attention matrix 
+        expanded_instruction_attention_mask = torch.zeros(input_attention_mask_shape)
+        # assigning the the actual instruction attention matrix to the expanded_instruction_attention_mask
+        # eg:
+        # instruction_attention_mask: 3x3
+        #  [[1,1,1],
+        #   [1,1,0],
+        #   [1,0,0]]
+        # expanded_instruction_attention_mask: 3x4
+        #  [[1,1,1,0],
+        #   [1,1,0,0],
+        #   [1,0,0,0]]
+        expanded_instruction_attention_mask[:instruction_attention_mask.size(0), :instruction_attention_mask.size(1)] = instruction_attention_mask
+
+        # inverting the 1 to 0 and vice versa
+        # this is because before the pooling layer we want to consider only the tokens corresponding to the input text 
+        # and not the instruction. 
+        expanded_instruction_attention_mask = 1 - expanded_instruction_attention_mask
+        input_features['instruction_mask'] = expanded_instruction_attention_mask
+        if return_data_type == "np":
+            input_features["attention_mask"] = input_features["attention_mask"].numpy()
+            instruction_features["attention_mask"] = instruction_features["attention_mask"].numpy()
+        return input_features
 
     def smart_batching_collate(self, batch):
         num_texts = len(batch[0].texts)
@@ -394,48 +428,31 @@ class INSTRUCTOR(SentenceTransformer):
         for example in batch:
             for idx, text in enumerate(example.texts):
                 texts[idx].append(text)
-
             labels.append(example.label)
 
         labels = torch.tensor(labels)
+        batched_input_features = []
 
-
-        sentence_features = []
         for idx in range(num_texts):
             assert isinstance(texts[idx][0], list)
             assert len(texts[idx][0])==2,f"The input should have both instruction and input text"
-            # if len(texts[idx][0])==3:
-                # print('component 3')
+
             num = len(texts[idx])
-            contexts = []
-            concatenated_input_texts = []
+            instructions = []
+            instruction_prepended_input_texts = []
             for local_idx in range(num):
                 assert len(texts[idx][local_idx])==2
-                contexts.append(texts[idx][local_idx][0])
-                concatenated_input_texts.append(''.join(texts[idx][local_idx]))
-                assert isinstance(contexts[-1],str)
-                assert isinstance(concatenated_input_texts[-1],str)
-            tokenized = self.tokenize(concatenated_input_texts)
-            context_tok = self.tokenize(contexts)
-            tokenized['context_masks'] = torch.sum(context_tok['attention_mask'],dim=1)
-            tokenized['context_masks'] = tokenized['context_masks'] - 1
-            for my_idx in range(len(tokenized['context_masks'])):
-                if tokenized['context_masks'][my_idx]<=1:
-                    tokenized['context_masks'][my_idx] = 0
-                # text_types = [pair[-1] for pair in texts[idx]]
-                # assert all([tid==1 for tid in text_types]) or all([tid==0 for tid in text_types])
-                # tokenized['text_type'] = text_types[0]
-            # elif len(texts[idx][0])==2:
-            #     input_texts = [pair[0] for pair in texts[idx]]
-            #     text_types = [pair[-1] for pair in texts[idx]]
-            #     assert all([tid == 1 for tid in text_types]) or all([tid == 0 for tid in text_types])
-            #     tokenized = self.tokenize(input_texts)
-            #     tokenized['text_type'] = text_types[0]
-            # else:
-            #     raise ValueError('tokenization error')
-            sentence_features.append(tokenized)
+                instructions.append(texts[idx][local_idx][0])
+                instruction_prepended_input_texts.append(''.join(texts[idx][local_idx]))
+                assert isinstance(instructions[-1],str)
+                assert isinstance(instruction_prepended_input_texts[-1],str)
+                
+            input_features = self.tokenize(instruction_prepended_input_texts)
+            instruction_features = self.tokenize(instructions)
+            input_features = INSTRUCTOR.prepare_input_features(input_features, instruction_features)
+            batched_input_features.append(input_features)
 
-        return sentence_features, labels
+        return batched_input_features, labels
 
     def _load_sbert_model(self, model_path):
         """
@@ -464,10 +481,11 @@ class INSTRUCTOR(SentenceTransformer):
         modules = OrderedDict()
         for module_config in modules_config:
             if module_config['idx']==0:
-                print('load INSTRUCTOR_Transformer')
                 module_class = INSTRUCTOR_Transformer
             elif module_config['idx']==1:
                 module_class = INSTRUCTOR_Pooling
+            elif module_config['idx']==2:
+                module_class = INSTRUCTOR_Dense
             else:
                 module_class = import_from_string(module_config['type'])
             module = module_class.load(os.path.join(model_path, module_config['path']))
