@@ -292,3 +292,4 @@ We thank the community's efforts for extending INSTRUCTOR!
 * [LangChain](https://python.langchain.com/docs/integrations/text_embedding/instruct_embeddings) supports InstructEmbeddings, which use the INSTRUCTOR model.
 * [MosaicML](https://www.mosaicml.com/inference) has included [Instructor-Large](https://huggingface.co/hkunlp/instructor-large) and [Instructor-XL](https://huggingface.co/hkunlp/instructor-xl)
 * [embaas](https://embaas.io/docs/models/instructor) integrated [Instructor-Large](https://huggingface.co/hkunlp/instructor-large)
+* [Haystack](https://haystack.deepset.ai/integrations/instructor-embedder) includes `InstructorTextEmbedder` and `InstructorDocumentEmbedder` components.
