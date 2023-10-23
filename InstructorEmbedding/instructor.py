@@ -29,6 +29,7 @@ class INSTRUCTOR_Dense(Dense):
     @staticmethod
     def load(input_path):
         with open(os.path.join(input_path, 'config_gru.json')) as fIn:
+        # with open(os.path.join(input_path, 'config.json')) as fIn:
             config = json.load(fIn)
 
         config['activation_function'] = import_from_string(config['activation_function'])()
@@ -103,8 +104,8 @@ class INSTRUCTOR_Pooling(nn.Module):
             with open(os.path.join(model_config_path, 'config.json')) as fIn:
                 model_config = json.load(fIn)
                 self.gru_input_size = model_config["d_model"]
-
-            self.gru = nn.GRU(input_size=self.gru_input_size, hidden_size=self.gru_input_size, bias=True, batch_first=True, bidirectional=True)
+##
+            self.gru = nn.GRU(input_size=self.gru_input_size, hidden_size=self.gru_input_size, bias=False, batch_first=True, bidirectional=True)
             if os.path.exists(gru_model_path):
                 self.gru.load_state_dict(torch.load(gru_model_path))
 
@@ -238,6 +239,7 @@ class INSTRUCTOR_Pooling(nn.Module):
 
     def save(self, output_path):
         with open(os.path.join(output_path, 'config_gru.json'), 'w') as fOut:
+        # with open(os.path.join(output_path, 'config.json'), 'w') as fOut:
             json.dump(self.get_config_dict(), fOut, indent=2)
         if self.pooling_mode_gru:
             torch.save(self.gru.state_dict(), os.path.join(output_path, 'gru.bin'))
@@ -245,6 +247,7 @@ class INSTRUCTOR_Pooling(nn.Module):
     @staticmethod
     def load(input_path):
         with open(os.path.join(input_path, 'config_gru.json')) as fIn:
+        # with open(os.path.join(input_path, 'config.json')) as fIn:
             config = json.load(fIn)
         return INSTRUCTOR_Pooling(config_path=input_path, **config)
 

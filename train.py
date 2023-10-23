@@ -654,7 +654,7 @@ def main():
         label_pad_token_id=label_pad_token_id,
         pad_to_multiple_of=8 if training_args.fp16 else None,
     )
-    callback = InstructorCallBack()
+    # callback = InstructorCallBack()
     trainer = InstructorTrainer(
         model=model,
         args=training_args,
@@ -663,7 +663,7 @@ def main():
         tokenizer=tokenizer,
         data_collator=data_collator,
         compute_metrics=None,
-        callbacks=[callback]
+        # callbacks=[callback]
     )
 
     checkpoint = None

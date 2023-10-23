@@ -303,6 +303,11 @@ DEFINITIONS = {
                 'query': 'Represent the finance questions to retrieve a supporting answer: ',
                 'corpus': 'Represent the finance answers for retrieval: ',
             },
+        'CustomRetrieval':
+            {
+                'query': 'Represent the Zoho questions to retrieve a supporting answer: ',
+                'corpus': 'Represent the Zoho document for retrieval: ',
+            },
     },
     'hkunlp/instructor-large':{
         'ClimateFEVER':
@@ -434,6 +439,11 @@ DEFINITIONS = {
             {
                 'query': 'Represent the finance question for retrieving the supporting answers: ',
                 'corpus': 'Represent the finance answer for retrieval: ',
+            },
+        'CustomRetrieval':
+            {
+                'query': 'Represent the Zoho questions to retrieve a supporting answer: ',
+                'corpus': 'Represent the Zoho document for retrieval: ',
             },
     },
     'hkunlp/instructor-base': {
@@ -567,6 +577,11 @@ DEFINITIONS = {
                 'query': 'Represent the finance question for retrieving the supporting answers: ',
                 'corpus': 'Represent the finance answer for retrieval: ',
             },
+        'CustomRetrieval':
+            {
+                'query': 'Represent the Zoho questions to retrieve a supporting answer: ',
+                'corpus': 'Represent the Zoho document for retrieval: ',
+            },
     },
 }
 
@@ -613,8 +628,8 @@ class AbsTaskRetrieval(AbsTask):
         corpus, queries, relevant_docs = self.corpus[split], self.queries[split], self.relevant_docs[split]
 
         try:
-            if self.description["beir_name"].startswith("cqadupstack"):
-                raise ImportError("CQADupstack is incompatible with latest BEIR")
+            # if self.description["beir_name"].startswith("cqadupstack"):
+            raise ImportError("CQADupstack is incompatible with latest BEIR")
             from beir.retrieval.search.dense import DenseRetrievalParallelExactSearch as DRPES
             model = model if self.is_dres_compatible(model, is_parallel=True) else DRESModel(model,**kwargs)
             model = DRPES(

@@ -3,6 +3,7 @@ from .ClimateFEVERRetrieval import *
 from .CQADupstackAndroidRetrieval import *
 from .CQADupstackEnglishRetrieval import *
 from .CQADupstackGamingRetrieval import *
+from .CustomRetrieval import *
 from .CQADupstackGisRetrieval import *
 from .CQADupstackMathematicaRetrieval import *
 from .CQADupstackPhysicsRetrieval import *

@@ -18,8 +18,8 @@ class BeIRTask(AbsTask):
             raise Exception("Retrieval tasks require beir package. Please install it with `pip install mteb[beir]`")
 
         try:
-            if self.description["beir_name"].startswith("cqadupstack"):
-                raise ImportError("CQADupstack is incompatible with latest BEIR")
+            # if self.description["beir_name"].startswith("cqadupstack"):
+            raise ImportError("CQADupstack is incompatible with latest BEIR")
             from beir.datasets.data_loader_hf import HFDataLoader as BeirDataLoader
         except ImportError:
             from beir.datasets.data_loader import GenericDataLoader as BeirDataLoader
