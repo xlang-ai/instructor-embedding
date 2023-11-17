@@ -13,7 +13,7 @@ import nltk  # Here to have a nice missing dependency error message early on
 
 import transformers
 from filelock import FileLock
-from InstructorEmbedding import INSTRUCTOR
+from InstructorEmbedding import Instructor, InstructorTransformer
 from transformers import (
     AutoTokenizer,
     DataCollatorForSeq2Seq,
@@ -27,6 +27,9 @@ from transformers import (
     set_seed,
 )
 from transformers.trainer_utils import get_last_checkpoint
+from transformers.trainer_callback import TrainerCallback, TrainerState, TrainerControl
+from transformers.training_args import TrainingArguments
+
 from transformers.utils import check_min_version, is_offline_mode
 from torch.utils.data import Dataset, SequentialSampler
 from torch.utils.data.distributed import DistributedSampler
@@ -100,7 +103,7 @@ class InstructorTrainer(Seq2SeqTrainer):
             cur_inputs = {
                 'input_ids': inputs[f'{k}_input_ids'],
                 'attention_mask': inputs[f'{k}_attention_mask'],
-                'context_masks': inputs[f'{k}_context_masks'],
+                'instruction_mask': inputs[f'{k}_instruction_mask'],
             }
             cur_results[k] = model(cur_inputs)['sentence_embedding']
         embeddings_query = cur_results['query']
@@ -156,7 +159,6 @@ class ModelArguments:
     """
     Arguments pertaining to which model/config/tokenizer we are going to fine-tune from.
     """
-
     model_name_or_path: str = field(
         metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
     )
@@ -424,13 +426,8 @@ def main():
             )
 
     # Set seed before initializing model.
-    tokenizer = AutoTokenizer.from_pretrained(
-        model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
-        cache_dir=model_args.cache_dir,
-        use_fast=model_args.use_fast_tokenizer,
-        revision=model_args.model_revision,
-        use_auth_token=True if model_args.use_auth_token else None,
-    )
+    instructor_tokenizer = InstructorTransformer(model_name_or_path=model_args.model_name_or_path, load_model=False)
+    tokenizer = instructor_tokenizer.tokenizer #pre-trained tokentizer
 
     set_seed(training_args.seed)
     with open(os.path.join(model_args.cache_dir, 'medi-data.json')) as f:
@@ -443,7 +440,7 @@ def main():
 
     real_batch_size = max(training_args.per_device_train_batch_size,
                           training_args.per_device_train_batch_size * torch.cuda.device_count())
-    # print('real_batch_size: ', real_batch_size,training_args.per_device_train_batch_size,torch.cuda.device_count())
+
     def get_examples_raw(old_examples_raw, total_n, real_batch_size):
         examples_raw = []
         for idx in range(0, total_n, real_batch_size):
@@ -485,13 +482,11 @@ def main():
         for i in range(total_num):
             cur_e = examples_raw[i]
             for k in ['query','pos','neg']:
-                for s in cur_e[k][:-1]:
-                    assert not '!@#$%^&**!@#$%^&**' in s
                 cur_e[k][-1] = str(cur_e[k][-1])
                 if not data_args.add_prompt_to_document:
                     cur_e[k][0] = ''
                 assert cur_e[k][0].startswith('Represent ') or cur_e[k][0]==''
-                examples[k].append('!@#$%^&**!@#$%^&**'.join(cur_e[k]))
+                examples[k].append(cur_e[k])
             if not cur_e['task_id'] in task_name_map:
                 task_name_map[cur_e['task_id']] = task_count
                 task_count += 1
@@ -500,36 +495,20 @@ def main():
 
     train_raw_datasets = DatasetDict({'train':Dataset.from_dict(get_dataset(train_examples_raw))})
 
-    model = INSTRUCTOR(real_name_or_path, cache_folder=model_args.cache_dir)
+    model = Instructor(real_name_or_path, cache_folder=model_args.cache_dir)
     column_names = train_raw_datasets["train"].column_names
 
     def preprocess_function(examples):
         all_tokenized = None
         for key in ['query','pos','neg']:
-            num = len(examples[key])
-            contexts = []
-            concatenated_input_texts = []
-            for local_idx in range(num):
-                splits = examples[key][local_idx].split('!@#$%^&**!@#$%^&**')
-                assert len(splits) == 2
-                contexts.append(splits[0])
-                concatenated_input_texts.append(''.join(splits))
-                assert isinstance(contexts[-1], str)
-                assert isinstance(concatenated_input_texts[-1], str)
-            tokenized = tokenizer(concatenated_input_texts,padding='max_length', truncation='longest_first', return_tensors="pt", max_length=data_args.max_source_length)
-            context_tok = tokenizer(contexts,padding='max_length', truncation='longest_first', return_tensors="pt", max_length=data_args.max_source_length)
-            tokenized['context_masks'] = torch.sum(context_tok['attention_mask'], dim=1)
-            tokenized['context_masks'] = tokenized['context_masks'] - 1
-            for my_idx in range(len(tokenized['context_masks'])):
-                if tokenized['context_masks'][my_idx] <= 1:
-                    tokenized['context_masks'][my_idx] = 0
-            keys = tokenized.keys()
+            input_features = instructor_tokenizer.tokenize(examples[key])
+            keys = input_features.keys()
             if all_tokenized is None:
-                all_tokenized = tokenized.copy()
+                all_tokenized = input_features.copy()
                 for k in keys:
                     all_tokenized[k] = all_tokenized[k].tolist()
             for k in keys:
-                all_tokenized[f'{key}_{k}'] = tokenized[k].tolist()
+                all_tokenized[f'{key}_{k}'] = input_features[k].tolist()
         all_tokenized['task_id'] = examples['task_id']
         return all_tokenized
 
