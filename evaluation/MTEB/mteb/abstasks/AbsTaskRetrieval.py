@@ -597,7 +597,7 @@ class AbsTaskRetrieval(AbsTask):
         model,
         split="test",
         batch_size=128,
-        corpus_chunk_size=None,
+        corpus_chunk_size=50000,
         target_devices=None,
         score_function="cos_sim",
         **kwargs
@@ -708,7 +708,7 @@ class DRESModel:
             instruction = DEFINITIONS[self.args.prompt][self.args.task_name]['query']
         if self.args.prompt:
             for s in queries:
-                new_sentences.append([instruction, s, 0])
+                new_sentences.append([instruction, s])
         else:
             new_sentences = queries
 
@@ -717,7 +717,6 @@ class DRESModel:
 
     def encode_corpus(self, corpus: List[Dict[str, str]], batch_size: int, **kwargs):
         self.count += 1
-        # print('count: ',self.count)
         if type(corpus) is dict:
             sentences = [
                 (corpus["title"][i] + ' ' + corpus["text"][i]).strip()
@@ -733,28 +732,26 @@ class DRESModel:
         new_sentences = []
         instruction = DEFINITIONS[self.args.prompt][self.args.task_name]['corpus']
         for s in sentences:
-            new_sentences.append([instruction, s, 0])
-        # kwargs['show_progress_bar'] = False
-        return self.model.encode(sentences, batch_size=128, **kwargs)
+            new_sentences.append([instruction, s])
+        return self.model.encode(new_sentences, batch_size=128, **kwargs)
 
     def encode_corpus_parallel(
         self, corpus: List[Dict[str, str]], pool: Dict[str, object], batch_size: int, chunk_id: int, **kwargs
     ):
+        sentences = []
         instruction = DEFINITIONS[self.args.prompt][self.args.task_name]['corpus']
         if type(corpus) is dict:
-            sentences = [
-                [instruction, (corpus["title"][i] + self.sep + corpus["text"][i]).strip()]
-                (corpus["title"][i] + self.sep + corpus["text"][i]).strip()
-                if "title" in corpus
-                else corpus["text"][i].strip()
-                for i in range(len(corpus["text"]))
-            ]
+            for i in range(len(corpus["text"])):
+                sentence = corpus["text"][i].strip()
+                if "title" in corpus:
+                    sentence = corpus["title"][i].strip() + self.sep + sentence
+                sentences.append([instruction, sentence])
         else:
-            sentences = [
-                [instruction, (doc["title"] + self.sep + doc["text"]).strip()]
-                (doc["title"] + self.sep + doc["text"]).strip() if "title" in doc else doc["text"].strip()
-                for doc in corpus
-            ]
+            for doc in corpus:
+                sentence = doc["text"].strip()
+                if "title" in doc:
+                    sentence = doc["title"].strip() + self.sep + sentence
+                sentences.append([instruction, sentence])
 
         if chunk_id is not None and chunk_id >= len(pool["processes"]):
             output_queue = pool["output"]

@@ -1,1 +1,5 @@
 .idea/
+/cache
+/evaluation/MTEB/mteb.egg-info
+/**/__pycache__
+/InstructorEmbedding.egg-info
