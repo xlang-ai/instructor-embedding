@@ -8,10 +8,12 @@ from tqdm.autonotebook import trange
 from torch import Tensor, device
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.models import Transformer
+from sentence_transformers.util import disabled_tqdm
 from transformers import AutoConfig
 from transformers import AutoTokenizer
 from collections import OrderedDict
 from torch import nn
+from huggingface_hub import snapshot_download
 
 def batch_to_device(batch, target_device: device):
     for key in batch:
@@ -437,10 +439,21 @@ class INSTRUCTOR(SentenceTransformer):
 
         return sentence_features, labels
 
-    def _load_sbert_model(self, model_path):
+    def _load_sbert_model(self, model_path, token = None, cache_folder = None, revision = None, trust_remote_code = False):
         """
         Loads a full sentence-transformers model
         """
+        # Taken mostly from: https://github.com/UKPLab/sentence-transformers/blob/66e0ee30843dd411c64f37f65447bb38c7bf857a/sentence_transformers/util.py#L544
+        download_kwargs = {
+            "repo_id": model_path,
+            "revision": revision,
+            "library_name": "sentence-transformers",
+            "token": token,
+            "cache_dir": cache_folder,
+            "tqdm_class": disabled_tqdm,
+        }
+        model_path = snapshot_download(**download_kwargs)
+
         # Check if the config_sentence_transformers.json file exists (exists since v2 of the framework)
         config_sentence_transformers_json_path = os.path.join(model_path, 'config_sentence_transformers.json')
         if os.path.exists(config_sentence_transformers_json_path):
