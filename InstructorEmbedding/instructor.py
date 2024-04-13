@@ -23,7 +23,7 @@ def batch_to_device(batch, target_device: str):
     return batch
 
 
-class InstructorPooling(nn.Module):
+class INSTRUCTORPooling(nn.Module):
     """Performs pooling (max or mean) on the token embeddings.
 
     Using pooling, it generates from a variable sized sentence a fixed sized sentence embedding.
@@ -245,7 +245,7 @@ class InstructorPooling(nn.Module):
         ) as config_file:
             config = json.load(config_file)
 
-        return InstructorPooling(**config)
+        return INSTRUCTORPooling(**config)
 
 
 def import_from_string(dotted_path):
@@ -271,7 +271,7 @@ def import_from_string(dotted_path):
         raise ImportError(msg)
 
 
-class InstructorTransformer(Transformer):
+class INSTRUCTORTransformer(Transformer):
     def __init__(
         self,
         model_name_or_path: str,
@@ -378,7 +378,7 @@ class InstructorTransformer(Transformer):
 
         with open(sbert_config_path, encoding="UTF-8") as config_file:
             config = json.load(config_file)
-        return InstructorTransformer(model_name_or_path=input_path, **config)
+        return INSTRUCTORTransformer(model_name_or_path=input_path, **config)
 
     def tokenize(self, texts):
         """
@@ -420,7 +420,7 @@ class InstructorTransformer(Transformer):
 
             input_features = self.tokenize(instruction_prepended_input_texts)
             instruction_features = self.tokenize(instructions)
-            input_features = Instructor.prepare_input_features(
+            input_features = INSTRUCTOR.prepare_input_features(
                 input_features, instruction_features
             )
         else:
@@ -430,7 +430,7 @@ class InstructorTransformer(Transformer):
         return output
 
 
-class Instructor(SentenceTransformer):
+class INSTRUCTOR(SentenceTransformer):
     @staticmethod
     def prepare_input_features(
         input_features, instruction_features, return_data_type: str = "pt"
@@ -510,7 +510,7 @@ class Instructor(SentenceTransformer):
 
             input_features = self.tokenize(instruction_prepended_input_texts)
             instruction_features = self.tokenize(instructions)
-            input_features = Instructor.prepare_input_features(
+            input_features = INSTRUCTOR.prepare_input_features(
                 input_features, instruction_features
             )
             batched_input_features.append(input_features)
@@ -559,9 +559,9 @@ class Instructor(SentenceTransformer):
         modules = OrderedDict()
         for module_config in modules_config:
             if module_config["idx"] == 0:
-                module_class = InstructorTransformer
+                module_class = INSTRUCTORTransformer
             elif module_config["idx"] == 1:
-                module_class = InstructorPooling
+                module_class = INSTRUCTORPooling
             else:
                 module_class = import_from_string(module_config["type"])
             module = module_class.load(os.path.join(model_path, module_config["path"]))
