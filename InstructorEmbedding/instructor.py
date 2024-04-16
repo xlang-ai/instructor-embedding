@@ -23,7 +23,7 @@ def batch_to_device(batch, target_device: str):
     return batch
 
 
-class INSTRUCTORPooling(nn.Module):
+class INSTRUCTOR_Pooling(nn.Module):
     """Performs pooling (max or mean) on the token embeddings.
 
     Using pooling, it generates from a variable sized sentence a fixed sized sentence embedding.
@@ -245,7 +245,7 @@ class INSTRUCTORPooling(nn.Module):
         ) as config_file:
             config = json.load(config_file)
 
-        return INSTRUCTORPooling(**config)
+        return INSTRUCTOR_Pooling(**config)
 
 
 def import_from_string(dotted_path):
@@ -573,7 +573,7 @@ class INSTRUCTOR(SentenceTransformer):
             if module_config["idx"] == 0:
                 module_class = INSTRUCTORTransformer
             elif module_config["idx"] == 1:
-                module_class = INSTRUCTORPooling
+                module_class = INSTRUCTOR_Pooling
             else:
                 module_class = import_from_string(module_config["type"])
             module = module_class.load(os.path.join(model_path, module_config["path"]))
