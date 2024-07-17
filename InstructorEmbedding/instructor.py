@@ -395,7 +395,7 @@ class INSTRUCTORTransformer(Transformer):
 
             input_features = self.tokenizer(
                 *to_tokenize,
-                padding="max_length",
+                padding=True,
                 truncation="longest_first",
                 return_tensors="pt",
                 max_length=self.max_seq_length,
