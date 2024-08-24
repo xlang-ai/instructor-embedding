@@ -521,20 +521,21 @@ class INSTRUCTOR(SentenceTransformer):
         """
         Loads a full sentence-transformers model
         """
+        # copied from https://github.com/UKPLab/sentence-transformers/blob/66e0ee30843dd411c64f37f65447bb38c7bf857a/sentence_transformers/util.py#L559
+        # because we need to get files outside of the allow_patterns too
+        # If file is local
         if os.path.isdir(model_path):
-            # If model_path is a local directory, load the model directly
             model_path = str(model_path)
         else:
             # If model_path is a Hugging Face repository ID, download the model
             download_kwargs = {
                 "repo_id": model_path,
                 "revision": revision,
-                "library_name": "sentence-transformers",
+                "library_name": "InstructorEmbedding",
                 "token": token,
                 "cache_dir": cache_folder,
                 "tqdm_class": disabled_tqdm,
             }
-            model_path = snapshot_download(**download_kwargs)
 
         # Check if the config_sentence_transformers.json file exists (exists since v2 of the framework)
         config_sentence_transformers_json_path = os.path.join(
