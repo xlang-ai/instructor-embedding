@@ -23,7 +23,7 @@ def batch_to_device(batch, target_device: str):
     return batch
 
 
-class INSTRUCTOR_Pooling(nn.Module):
+class INSTRUCTORPooling(nn.Module):
     """Performs pooling (max or mean) on the token embeddings.
 
     Using pooling, it generates from a variable sized sentence a fixed sized sentence embedding.
@@ -245,7 +245,7 @@ class INSTRUCTOR_Pooling(nn.Module):
         ) as config_file:
             config = json.load(config_file)
 
-        return INSTRUCTOR_Pooling(**config)
+        return INSTRUCTORPooling(**config)
 
 
 def import_from_string(dotted_path):
@@ -536,13 +536,6 @@ class INSTRUCTOR(SentenceTransformer):
                 "cache_dir": cache_folder,
                 "tqdm_class": disabled_tqdm,
             }
-            # Try to download from the remote
-            try:
-                model_path = snapshot_download(**download_kwargs)
-            except Exception:
-                # Otherwise, try local (i.e. cache) only
-                download_kwargs["local_files_only"] = True
-                model_path = snapshot_download(**download_kwargs)
 
         # Check if the config_sentence_transformers.json file exists (exists since v2 of the framework)
         config_sentence_transformers_json_path = os.path.join(
@@ -573,7 +566,7 @@ class INSTRUCTOR(SentenceTransformer):
             if module_config["idx"] == 0:
                 module_class = INSTRUCTORTransformer
             elif module_config["idx"] == 1:
-                module_class = INSTRUCTOR_Pooling
+                module_class = INSTRUCTORPooling
             else:
                 module_class = import_from_string(module_config["type"])
             module = module_class.load(os.path.join(model_path, module_config["path"]))
