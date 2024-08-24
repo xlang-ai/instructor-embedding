@@ -2,10 +2,9 @@
 
 This is a fork for the Instructor model becuase the original repository isn't kept up anymore.  I've also made some improvements to their source code:
 
-1) Fixing it to work with versions of the ```sentence-transformers``` library after version 2.2.2
-   > The original only supports version 2.2.2.
-2) Properly download the models from huggingface.
-3) Ability to use the model downloaded to a folder on your computer - not ALWAYS having to download from Huggingface.
+1) Fixing it to work with the ```sentence-transformers``` library above 2.2.2.
+2) Properly download the models from huggingface using the new "snapshot download" API.
+3) Ability to specify where you want the model donwloaded with the "cache_dir" parameter.
 
 ## What follows is the original repository's readme file.  Ignore the quantization section, however, becuase pytorch has changed its API since then.
 
