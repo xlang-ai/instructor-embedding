@@ -23,7 +23,7 @@ def batch_to_device(batch, target_device: str):
     return batch
 
 
-class InstructorPooling(nn.Module):
+class INSTRUCTORPooling(nn.Module):
     """Performs pooling (max or mean) on the token embeddings.
 
     Using pooling, it generates from a variable sized sentence a fixed sized sentence embedding.
@@ -245,7 +245,7 @@ class InstructorPooling(nn.Module):
         ) as config_file:
             config = json.load(config_file)
 
-        return InstructorPooling(**config)
+        return INSTRUCTORPooling(**config)
 
 
 def import_from_string(dotted_path):
@@ -271,7 +271,7 @@ def import_from_string(dotted_path):
         raise ImportError(msg)
 
 
-class InstructorTransformer(Transformer):
+class INSTRUCTORTransformer(Transformer):
     def __init__(
         self,
         model_name_or_path: str,
@@ -378,7 +378,7 @@ class InstructorTransformer(Transformer):
 
         with open(sbert_config_path, encoding="UTF-8") as config_file:
             config = json.load(config_file)
-        return InstructorTransformer(model_name_or_path=input_path, **config)
+        return INSTRUCTORTransformer(model_name_or_path=input_path, **config)
 
     def tokenize(self, texts):
         """
@@ -420,7 +420,7 @@ class InstructorTransformer(Transformer):
 
             input_features = self.tokenize(instruction_prepended_input_texts)
             instruction_features = self.tokenize(instructions)
-            input_features = Instructor.prepare_input_features(
+            input_features = INSTRUCTOR.prepare_input_features(
                 input_features, instruction_features
             )
         else:
@@ -430,7 +430,7 @@ class InstructorTransformer(Transformer):
         return output
 
 
-class Instructor(SentenceTransformer):
+class INSTRUCTOR(SentenceTransformer):
     @staticmethod
     def prepare_input_features(
         input_features, instruction_features, return_data_type: str = "pt"
@@ -510,27 +510,32 @@ class Instructor(SentenceTransformer):
 
             input_features = self.tokenize(instruction_prepended_input_texts)
             instruction_features = self.tokenize(instructions)
-            input_features = Instructor.prepare_input_features(
+            input_features = INSTRUCTOR.prepare_input_features(
                 input_features, instruction_features
             )
             batched_input_features.append(input_features)
 
         return batched_input_features, labels
 
-    def _load_sbert_model(self, model_path, token = None, cache_folder = None, revision = None, trust_remote_code = False):
+    def _load_sbert_model(self, model_path, token=None, cache_folder=None, revision=None, trust_remote_code=False):
         """
         Loads a full sentence-transformers model
         """
-        # Taken mostly from: https://github.com/UKPLab/sentence-transformers/blob/66e0ee30843dd411c64f37f65447bb38c7bf857a/sentence_transformers/util.py#L544
-        download_kwargs = {
-            "repo_id": model_path,
-            "revision": revision,
-            "library_name": "sentence-transformers",
-            "token": token,
-            "cache_dir": cache_folder,
-            "tqdm_class": disabled_tqdm,
-        }
-        model_path = snapshot_download(**download_kwargs)
+        # copied from https://github.com/UKPLab/sentence-transformers/blob/66e0ee30843dd411c64f37f65447bb38c7bf857a/sentence_transformers/util.py#L559
+        # because we need to get files outside of the allow_patterns too
+        # If file is local
+        if os.path.isdir(model_path):
+            model_path = str(model_path)
+        else:
+            # If model_path is a Hugging Face repository ID, download the model
+            download_kwargs = {
+                "repo_id": model_path,
+                "revision": revision,
+                "library_name": "InstructorEmbedding",
+                "token": token,
+                "cache_dir": cache_folder,
+                "tqdm_class": disabled_tqdm,
+            }
 
         # Check if the config_sentence_transformers.json file exists (exists since v2 of the framework)
         config_sentence_transformers_json_path = os.path.join(
@@ -559,9 +564,9 @@ class Instructor(SentenceTransformer):
         modules = OrderedDict()
         for module_config in modules_config:
             if module_config["idx"] == 0:
-                module_class = InstructorTransformer
+                module_class = INSTRUCTORTransformer
             elif module_config["idx"] == 1:
-                module_class = InstructorPooling
+                module_class = INSTRUCTORPooling
             else:
                 module_class = import_from_string(module_config["type"])
             module = module_class.load(os.path.join(model_path, module_config["path"]))
@@ -619,7 +624,7 @@ class Instructor(SentenceTransformer):
             input_was_string = True
 
         if device is None:
-            device = self._target_device
+            device = self.device
 
         self.to(device)
 
