@@ -282,6 +282,7 @@ class INSTRUCTORTransformer(Transformer):
             do_lower_case: bool = False,
             tokenizer_name_or_path: Union[str, None] = None,
             load_model: bool = True,
+            backend: str = "torch",
     ):
         super().__init__(model_name_or_path)
         if model_args is None:
@@ -307,7 +308,7 @@ class INSTRUCTORTransformer(Transformer):
             )
 
         if load_model:
-            self._load_model(self.model_name_or_path, config, cache_dir, 'torch',**model_args)
+            self._load_model(self.model_name_or_path, config, cache_dir, backend,**model_args)
         self.tokenizer = AutoTokenizer.from_pretrained(
             tokenizer_name_or_path
             if tokenizer_name_or_path is not None
