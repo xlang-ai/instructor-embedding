@@ -460,54 +460,61 @@ class INSTRUCTOR(SentenceTransformer):
         return batched_input_features, labels
 
     def _load_sbert_model(self, model_path, token=None, cache_folder=None, revision=None, trust_remote_code=False, local_files_only=False, model_kwargs=None, tokenizer_kwargs=None, config_kwargs=None):
-            if os.path.isdir(model_path):
-                model_path = str(model_path)
-            else:
-                download_kwargs = {
-                    "repo_id": model_path,
-                    "revision": revision,
-                    "library_name": "sentence-transformers",
-                    "token": token,
-                    "cache_dir": cache_folder,
-                    "tqdm_class": disabled_tqdm,
-                    "local_files_only": local_files_only,
-                }
-                model_path = snapshot_download(**download_kwargs)
+       import inspect
+       base_signature = inspect.signature(SentenceTransformer.__init__)
+       
+       if os.path.isdir(model_path):
+           model_path = str(model_path)
+       else:
+           download_kwargs = {
+               "repo_id": model_path,
+               "revision": revision,
+               "library_name": "sentence-transformers",
+               "token": token,
+               "cache_dir": cache_folder,
+               "tqdm_class": disabled_tqdm,
+               "local_files_only": local_files_only,
+           }
+           model_path = snapshot_download(**download_kwargs)
 
-            config_sentence_transformers_json_path = os.path.join(
-                model_path, "config_sentence_transformers.json"
-            )
-            if os.path.exists(config_sentence_transformers_json_path):
-                with open(
-                    config_sentence_transformers_json_path, encoding="UTF-8"
-                ) as config_file:
-                    self._model_config = json.load(config_file)
+       config_sentence_transformers_json_path = os.path.join(
+           model_path, "config_sentence_transformers.json"
+       )
+       if os.path.exists(config_sentence_transformers_json_path):
+           with open(
+               config_sentence_transformers_json_path, encoding="UTF-8"
+           ) as config_file:
+               self._model_config = json.load(config_file)
 
-            model_card_path = os.path.join(model_path, "README.md")
-            if os.path.exists(model_card_path):
-                try:
-                    with open(model_card_path, encoding="utf8") as config_file:
-                        self._model_card_text = config_file.read()
-                except:
-                    pass
+       model_card_path = os.path.join(model_path, "README.md")
+       if os.path.exists(model_card_path):
+           try:
+               with open(model_card_path, encoding="utf8") as config_file:
+                   self._model_card_text = config_file.read()
+           except:
+               pass
 
-            modules_json_path = os.path.join(model_path, "modules.json")
-            with open(modules_json_path, encoding="UTF-8") as config_file:
-                modules_config = json.load(config_file)
+       modules_json_path = os.path.join(model_path, "modules.json")
+       with open(modules_json_path, encoding="UTF-8") as config_file:
+           modules_config = json.load(config_file)
 
-            modules = OrderedDict()
-            module_kwargs = {}
-            for module_config in modules_config:
-                if module_config["idx"] == 0:
-                    module_class = INSTRUCTORTransformer
-                elif module_config["idx"] == 1:
-                    module_class = INSTRUCTORPooling
-                else:
-                    module_class = import_from_string(module_config["type"])
-                module = module_class.load(os.path.join(model_path, module_config["path"]))
-                modules[module_config["name"]] = module
+       modules = OrderedDict()
+       if 'backend' in base_signature.parameters:
+           module_kwargs = {}
+       
+       for module_config in modules_config:
+           if module_config["idx"] == 0:
+               module_class = INSTRUCTORTransformer
+           elif module_config["idx"] == 1:
+               module_class = INSTRUCTORPooling
+           else:
+               module_class = import_from_string(module_config["type"])
+           module = module_class.load(os.path.join(model_path, module_config["path"]))
+           modules[module_config["name"]] = module
 
-            return modules, module_kwargs
+       if 'backend' in base_signature.parameters:
+           return modules, module_kwargs
+       return modules
 
     def encode(
         self,
