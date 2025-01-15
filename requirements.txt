@@ -1,7 +1,8 @@
 transformers>=4.20,<5.0
-datasets>=2.20,<3.0
-pyarrow>=17.0,<18.0
-numpy>=1.0,<=1.26.4
+datasets>=2.20,<=3.2.0 # i can personally verify up to this limit as of today
+pyarrow>=17.0,<=18.1.0 # i can personally verify up to this limit as of today
+pyarrow-hotfix==0.6 # every so often this is necessary for pyarrow to avoid errors; rarely needed, but solves the error
+numpy>=1.0,<=1.26.4 # keep as is until numpy 2+ becomes more accepted
 requests>=2.26,<3.0
 scikit_learn>=1.0.2,<2.0
 scipy>=1.14,<2.0
