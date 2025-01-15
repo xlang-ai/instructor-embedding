@@ -1,13 +1,3 @@
-## My Personal Fork
-
-This is a fork for the Instructor model becuase the original repository isn't kept up anymore.  I've also made some improvements to their source code:
-
-1) Fixing it to work with the ```sentence-transformers``` library above 2.2.2.
-2) Properly download the models from huggingface using the new "snapshot download" API.
-3) Ability to specify where you want the model donwloaded with the "cache_dir" parameter.
-
-## What follows is the original repository's readme file.  Ignore the quantization section, however, becuase pytorch has changed its API since then.
-
 # One Embedder, Any Task: Instruction-Finetuned Text Embeddings
 
 This repository contains the code and pre-trained models for our paper [One Embedder, Any Task: Instruction-Finetuned Text Embeddings](https://arxiv.org/abs/2212.09741). Please refer to our [project page](https://instructor-embedding.github.io/) for a quick project overview.
