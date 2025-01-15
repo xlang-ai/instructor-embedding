@@ -1,12 +1,15 @@
-## My Personal Fork
+## Updated 1/14/2025
 
-This is a fork for the Instructor model becuase the original repository isn't kept up anymore.  I've also made some improvements to their source code:
+This is a fork for the Instructor model becuase the original repository is rarely (if ever) updated.  I've also made some improvements to their source code above and beyond making sure it functions on a basic level with libraries such as ```sentence-transformers```, ```langchain```, etc.  As of 1/14/2025, it works with the most recent versions of those libraries.
 
-1) Fixing it to work with the ```sentence-transformers``` library above 2.2.2.
-2) Properly download the models from huggingface using the new "snapshot download" API.
-3) Ability to specify where you want the model donwloaded with the "cache_dir" parameter.
+* Instructions on how to use it directly via the ```sentence-transformers``` library [are located here](https://sbert.net/docs/sentence_transformer/pretrained_models.html#instructor-models)
+* If using Langchain, the [instructions are here](https://python.langchain.com/api_reference/community/embeddings/langchain_community.embeddings.huggingface.HuggingFaceInstructEmbeddings.html#langchain_community.embeddings.huggingface.HuggingFaceInstructEmbeddings.model_kwargs)
 
-## What follows is the original repository's readme file.  Ignore the quantization section, however, becuase pytorch has changed its API since then.
+Feel free to ask any questions because it's a little tricky with newer versions of sentence-transformers.
+
+## Below is the original repository's readme file.  Ignore the quantization section, however, because pytorch has changed its API since then.
+
+<details><summary>Original Repository Readme</summary>
 
 # One Embedder, Any Task: Instruction-Finetuned Text Embeddings
 
@@ -257,7 +260,8 @@ You can evaluate your trained model checkpoints by specifying `--model_name` and
 ## Quantization 
 To [**Quantize**](https://pytorch.org/docs/stable/quantization.html) the Instructor embedding model, run the following code: 
 
-```python 
+```python
+</details>
 # imports 
 import torch
 from InstructorEmbedding import INSTRUCTOR
