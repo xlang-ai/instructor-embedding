@@ -7,6 +7,69 @@ This is a fork for the Instructor model becuase the original repository is rarel
 
 Feel free to ask any questions because it's a little tricky with newer versions of sentence-transformers.
 
+<details><summary>Example creating embeddings to be put into vectorstore</summary>
+
+```python
+# Creating embeddings to be put into a vector database
+from langchain_community.embeddings import HuggingFaceInstructEmbeddings
+
+model_kwargs = {
+    "device": "cuda",  # or "cpu"
+    "trust_remote_code": True,
+    "model_kwargs": {
+        "torch_dtype": torch.float16  # or torch.bfloat16 or torch.float32 depending on your needs
+    }
+}
+
+encode_kwargs = {
+    "normalize_embeddings": True,
+    "batch_size": 2
+}
+
+instructor_embeddings = HuggingFaceInstructEmbeddings(
+    model_name="hkunlp/instructor-xl",  # or any other instructor model
+    model_kwargs=model_kwargs,
+    encode_kwargs=encode_kwargs,
+    embed_instruction="Represent the document for retrieval:",
+    show_progress=True
+)
+
+embeddings = instructor_embeddings.embed_documents(texts)
+```
+</details>
+
+<details><summary>Example creatings embeddings from query</summary>
+
+```python
+from langchain_community.embeddings import HuggingFaceInstructEmbeddings
+
+model_kwargs = {
+    "device": "cuda",  # or "cpu"
+    "trust_remote_code": True,
+    "model_kwargs": {
+        "torch_dtype": torch.float16  # or torch.bfloat16 or torch.float32 depending on your needs
+    }
+}
+
+encode_kwargs = {
+    "normalize_embeddings": True,
+    "batch_size": 1  # For queries, batch size is always 1
+}
+
+query_embeddings = HuggingFaceInstructEmbeddings(
+    model_name="hkunlp/instructor-xl",  # or any other instructor model
+    model_kwargs=model_kwargs,
+    encode_kwargs=encode_kwargs,
+    embed_instruction="Represent the question for retrieving supporting documents:",
+    show_progress=False
+)
+
+# Generate embedding for your query
+query_embedding = query_embeddings.embed_query(query_text)
+```
+
+</details>
+
 ## Below is the original repository's readme file.  Ignore the quantization section, however, because pytorch has changed its API since then.
 
 <details><summary>Original Repository Readme</summary>
