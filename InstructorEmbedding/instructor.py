@@ -395,7 +395,7 @@ class INSTRUCTORTransformer(Transformer):
 
             input_features = self.tokenizer(
                 *to_tokenize,
-                padding="max_length",
+                padding=True,
                 truncation="longest_first",
                 return_tensors="pt",
                 max_length=self.max_seq_length,
@@ -517,7 +517,7 @@ class INSTRUCTOR(SentenceTransformer):
 
         return batched_input_features, labels
 
-    def _load_sbert_model(self, model_path, token=None, cache_folder=None, revision=None, trust_remote_code=False):
+    def _load_sbert_model(self, model_path, token=None, cache_folder=None, revision=None, trust_remote_code=False, local_files_only=False, model_kwargs=None, tokenizer_kwargs=None, config_kwargs=None):
         """
         Loads a full sentence-transformers model
         """
