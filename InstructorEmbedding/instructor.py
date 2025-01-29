@@ -293,6 +293,18 @@ class INSTRUCTORTransformer(Transformer):
         if tokenizer_name_or_path is not None:
             self.auto_model.config.tokenizer_class = self.tokenizer.__class__.__name__
 
+    def _load_model(self, model_name_or_path: str, config, cache_dir=None, backend=None, is_peft_model=False, **model_args):
+        """Loads the transformers model into the `auto_model` attribute"""
+        import inspect
+        parent_load_model = super()._load_model
+        
+        if 'is_peft_model' in inspect.signature(parent_load_model).parameters:
+            model_args['is_peft_model'] = is_peft_model
+        if 'backend' in inspect.signature(parent_load_model).parameters:
+            model_args['backend'] = backend or 'torch'
+                
+        return parent_load_model(model_name_or_path, config, cache_dir, **model_args)
+
     def forward(self, features):
         input_features = {
             "input_ids": features["input_ids"],
