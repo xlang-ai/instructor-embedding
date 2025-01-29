@@ -1,6 +1,6 @@
-## Updated 1/14/2025
+## Updated 1/29/2025
 
-This is a fork for the Instructor model becuase the original repository is rarely (if ever) updated.  I've also made some improvements to their source code above and beyond making sure it functions on a basic level with libraries such as ```sentence-transformers```, ```langchain```, etc.  As of 1/14/2025, it works with the most recent versions of those libraries.
+This is a fork for the Instructor model becuase the original repository is rarely (if ever) updated.  I've also made some improvements to their source code above and beyond making sure it functions on a basic level with libraries such as ```sentence-transformers```, ```langchain```, etc.  As of 1/29/2025, it works with the most recent versions of those libraries, and it should be backwards compatible as well.
 
 * Instructions on how to use it directly via the ```sentence-transformers``` library [are located here](https://sbert.net/docs/sentence_transformer/pretrained_models.html#instructor-models)
 * If using Langchain, the [instructions are here](https://python.langchain.com/api_reference/community/embeddings/langchain_community.embeddings.huggingface.HuggingFaceInstructEmbeddings.html#langchain_community.embeddings.huggingface.HuggingFaceInstructEmbeddings.model_kwargs)
